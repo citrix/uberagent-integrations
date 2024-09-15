@@ -1,0 +1,615 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "02a6d47a-4cff-4b20-bf80-055ce4cc4cfe",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "type": 4,
+            "isRequired": true,
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 300000
+                },
+                {
+                  "durationMs": 900000
+                },
+                {
+                  "durationMs": 1800000
+                },
+                {
+                  "durationMs": 3600000
+                },
+                {
+                  "durationMs": 14400000
+                },
+                {
+                  "durationMs": 43200000
+                },
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 172800000
+                },
+                {
+                  "durationMs": 259200000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2419200000
+                },
+                {
+                  "durationMs": 2592000000
+                },
+                {
+                  "durationMs": 5184000000
+                },
+                {
+                  "durationMs": 7776000000
+                }
+              ]
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": {
+              "durationMs": 1209600000
+            }
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters - 1"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "uberAgent_CitrixSession_SessionConfig_CL\r\n| summarize\r\n    UniqueSessions = dcount(SessionGUID_g),\r\n    UniqueUsers = dcount(SessionUser_s),\r\n    UniqueHosts = dcount(Computer)\r\n| project UniqueHosts, UniqueUsers, UniqueSessions ",
+              "size": 3,
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "gridSettings": {
+                "labelSettings": [
+                  {
+                    "columnId": "UniqueHosts",
+                    "label": "#Hosts"
+                  },
+                  {
+                    "columnId": "UniqueUsers",
+                    "label": "#Users"
+                  },
+                  {
+                    "columnId": "UniqueSessions",
+                    "label": "#Sessions"
+                  }
+                ]
+              }
+            },
+            "name": "query - 6"
+          }
+        ]
+      },
+      "name": "group - Overview",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 1,
+            "content": {
+              "json": "## Network"
+            },
+            "customWidth": "100",
+            "name": "text - 5"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "uberAgent_CitrixSession_SessionConfig_CL\r\n| summarize \r\n    [\"Policy Session reliability connections\"] = arg_max(NetworkPolicyAcceptSessionReliabilityConnections_b,TimeGenerated),\r\n    [\"Policy Session reliability port\"] = arg_max(NetworkPolicySessionReliabilityPort_d, TimeGenerated),\r\n    [\"Policy Session reliability timeout (s)\"] = arg_max(NetworkPolicySessionReliabilityTimeout_d, TimeGenerated),\r\n    [\"Policy ICA listener port\"] = arg_max(NetworkPolicyICAListenerPortNumber_d, TimeGenerated)\r\n    by SessionGUID_g\r\n| mv-expand PolicyValues = pack_array(\r\n    pack(\"Policy\", \"Policy Session reliability connections\", \"Value\", [\"Policy Session reliability connections\"]),\r\n    pack(\"Policy\", \"Policy Session reliability port\", \"Value\", [\"Policy Session reliability port\"]),\r\n    pack(\"Policy\", \"Policy Session reliability timeout (s)\", \"Value\", [\"Policy Session reliability timeout (s)\"]),\r\n    pack(\"Policy\", \"Policy ICA listener port\", \"Value\", [\"Policy ICA listener port\"])\r\n)\r\n| extend Policy = tostring(PolicyValues[\"Policy\"]), Value = tostring(PolicyValues[\"Value\"])\r\n| summarize Count = count() by Policy, Value\r\n| extend Value = replace_string(Value, \"true\", \"Allowed\") \r\n| extend Value = split(Value, \".\")\r\n| extend [\"Value(s): #sessions\"] = strcat(Value[0], \": \", Count)\r\n| summarize [\"Value(s): #sessions\"] = make_list([\"Value(s): #sessions\"]) by Policy\r\n| mv-expand [\"Value(s): #sessions\"]\r\n| project Policy, [\"Value(s): #sessions\"]\r\n| order by Policy asc",
+              "size": 1,
+              "title": "Network policies",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces"
+            },
+            "customWidth": "40",
+            "name": "query - 12",
+            "styleSettings": {
+              "showBorder": true
+            }
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "uberAgent_CitrixSession_SessionConfig_CL\r\n| summarize NetworkConnectedViaLatest = arg_max(TimeGenerated, NetworkConnectedVia_s) by SessionGUID_g\r\n| summarize count() by NetworkConnectedVia_s ",
+              "size": 3,
+              "title": "Sessions connected via",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart",
+              "chartSettings": {
+                "yAxis": [
+                  "count_"
+                ],
+                "showLegend": true
+              }
+            },
+            "customWidth": "20",
+            "name": "query - 2",
+            "styleSettings": {
+              "showBorder": true
+            }
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "uberAgent_Session_SessionDetail_CL\r\n| where isnotempty(SessionTransportProtocols_s)\r\n| summarize SessionTransportProtocolsLatest = arg_max(TimeGenerated, SessionTransportProtocols_s) by SessionGUID_g\r\n| summarize count() by SessionTransportProtocols_s \r\n",
+              "size": 3,
+              "title": "Transport protocols",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart",
+              "chartSettings": {
+                "yAxis": [
+                  "count_"
+                ],
+                "seriesLabelSettings": [
+                  {
+                    "seriesName": "UDP-CGP-ICA",
+                    "color": "amethyst"
+                  }
+                ]
+              }
+            },
+            "customWidth": "20",
+            "name": "query - 3",
+            "styleSettings": {
+              "showBorder": true
+            }
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "uberAgent_CitrixSession_SessionConfig_CL\r\n| where isnotempty(NetworkEdtMtu_d)\r\n| summarize NetworkEdtMtuLatest = arg_max(TimeGenerated, NetworkEdtMtu_d) by SessionGUID_g\r\n| summarize count() by NetworkEdtMtu_d \r\n| project countEntries = count_, NetworkEdtMtu = tostring(toint(NetworkEdtMtu_d))",
+              "size": 3,
+              "title": "Enlightened Data Transport MTU size",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "customWidth": "20",
+            "name": "query - 4",
+            "styleSettings": {
+              "showBorder": true
+            }
+          }
+        ]
+      },
+      "name": "group - Network",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Session access"
+      },
+      "name": "text - 6"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 9,
+            "content": {
+              "version": "KqlParameterItem/1.0",
+              "parameters": [
+                {
+                  "id": "b4480729-a6c8-4eca-94cb-27a3827ed1a6",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "GroupByField",
+                  "label": "Group By",
+                  "type": 2,
+                  "isRequired": true,
+                  "typeSettings": {
+                    "additionalResourceOptions": [],
+                    "showDefault": false
+                  },
+                  "jsonData": "[\r\n   {\r\n       \"label\": \"Platform-version\",\r\n       \"value\": \"strcat(SessionClientVersion_s,'@',SessionClientPlatform_s)\"\r\n   },\r\n   {\r\n       \"label\" : \"platform\",\r\n       \"value\": \"SessionClientPlatform_s\"\r\n   },\r\n   {\r\n       \"label\": \"version\",\r\n       \"value\": \"SessionClientVersion_s\"\r\n   }\r\n]",
+                  "timeContext": {
+                    "durationMs": 86400000
+                  },
+                  "value": "strcat(SessionClientVersion_s,'@',SessionClientPlatform_s)"
+                }
+              ],
+              "style": "pills",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces"
+            },
+            "name": "parameters - 0"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let TotalCount = toscalar(\r\n    uberAgent_Session_SessionDetail_CL\r\n    | where isnotempty(SessionClientVersion_s) and SessionBrokerType_s in (\"Citrix\")\r\n    | summarize count() by SessionClientVersion_s, SessionClientPlatform_s, SessionGUID_g\r\n    | project VersionString = {GroupByField}\r\n    | summarize Count = count() by VersionString\r\n    | sort by Count\r\n    | limit 10 \r\n    | summarize sum(Count)\r\n);\r\n\r\n\r\nuberAgent_Session_SessionDetail_CL\r\n| where isnotempty(SessionClientVersion_s) and SessionBrokerType_s in (\"Citrix\")\r\n| summarize count() by SessionClientVersion_s, SessionClientPlatform_s, SessionGUID_g\r\n| project VersionString = {GroupByField}\r\n| summarize Count = count() by VersionString\r\n| sort by Count\r\n| limit 10 \r\n| extend TotalCount\r\n| extend [\"Clients (%)\"] = round(Count * 100.0 / TotalCount, 1)\r\n",
+              "size": 3,
+              "title": "Client component by platform@version (top 10)",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "name": "query - 1"
+          }
+        ]
+      },
+      "customWidth": "50",
+      "name": "group - 12",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 9,
+            "content": {
+              "version": "KqlParameterItem/1.0",
+              "parameters": [
+                {
+                  "id": "ae738076-3a81-4b6a-a197-4ed7c72e8c43",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "GroupByConnectionStateDestribution",
+                  "label": "Group By",
+                  "type": 2,
+                  "isRequired": true,
+                  "typeSettings": {
+                    "additionalResourceOptions": [],
+                    "showDefault": false
+                  },
+                  "jsonData": "[\r\n    {\"value\": \"SessionGUID_g\", \"label\": \"Sessions\"},\r\n    {\"value\": \"SessionPublishedAppsCtx_s\", \"label\": \"Puiblished App\"}\r\n]",
+                  "timeContext": {
+                    "durationMs": 86400000
+                  },
+                  "value": "SessionPublishedAppsCtx_s"
+                }
+              ],
+              "style": "pills",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces"
+            },
+            "name": "parameters - 1"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "uberAgent_Session_SessionDetail_CL\r\n| where isnotempty(SessionConnectionState_s) \r\n| summarize SessionConnectionStateLatest = arg_max(TimeGenerated, SessionConnectionState_s) by {GroupByConnectionStateDestribution}\r\n| summarize count({GroupByConnectionStateDestribution}) by SessionConnectionState_s;",
+              "size": 3,
+              "title": "Connection state distribution",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart",
+              "chartSettings": {
+                "createOtherGroup": null
+              }
+            },
+            "name": "Connection state distribution by sessions"
+          }
+        ]
+      },
+      "customWidth": "50",
+      "name": "ConnectionStateDestribution",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 9,
+            "content": {
+              "version": "KqlParameterItem/1.0",
+              "parameters": [
+                {
+                  "id": "ec26f633-af5d-46f2-8069-a9b5afa38b90",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "SortOrderPublishedAppUsage",
+                  "label": "Sort Order",
+                  "type": 2,
+                  "isRequired": true,
+                  "typeSettings": {
+                    "additionalResourceOptions": [],
+                    "showDefault": false
+                  },
+                  "jsonData": "[\r\n    {\"value\": \"asc\", \"label\": \"Ascending\"},\r\n    {\"value\": \"desc\", \"label\": \"Descending\"}\r\n]",
+                  "timeContext": {
+                    "durationMs": 86400000
+                  },
+                  "value": "asc"
+                }
+              ],
+              "style": "pills",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces"
+            },
+            "name": "parameters - 1"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "uberAgent_Session_SessionDetail_CL\r\n| where SessionBrokerType_s == \"Citrix\" and SessionPublishedAppsCtx_s !=\"\"\r\n| summarize dcount(SessionGUID_g) by SessionPublishedAppsCtx_s\r\n| project [\"Published App Name\"] = SessionPublishedAppsCtx_s, [\"Session Count\"] = dcount_SessionGUID_g\r\n| sort by [\"Session Count\"] {SortOrderPublishedAppUsage}\r\n| limit 10",
+              "size": 0,
+              "title": "Published application usage (top 10)",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "barchart",
+              "chartSettings": {
+                "xAxis": "Published App Name",
+                "yAxis": [
+                  "Session Count"
+                ],
+                "showMetrics": false,
+                "ySettings": {
+                  "label": "#Sessions"
+                }
+              }
+            },
+            "name": "Published application usage (top 10)"
+          }
+        ]
+      },
+      "customWidth": "50",
+      "name": "PublishedAppUsageGroup",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 9,
+            "content": {
+              "version": "KqlParameterItem/1.0",
+              "parameters": [
+                {
+                  "id": "00d65a62-adc5-4112-88ab-af14b658d070",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "SortOrder",
+                  "label": "Sort Order",
+                  "type": 2,
+                  "isRequired": true,
+                  "typeSettings": {
+                    "additionalResourceOptions": [],
+                    "showDefault": false
+                  },
+                  "jsonData": "[\r\n    {\"value\": \"asc\", \"label\": \"Ascending\"},\r\n    {\"value\": \"desc\", \"label\": \"Descending\"}\r\n]",
+                  "timeContext": {
+                    "durationMs": 86400000
+                  },
+                  "value": "desc"
+                }
+              ],
+              "style": "pills",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces"
+            },
+            "name": "parameters - 1"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let TotalCount = toscalar(\r\n    uberAgent_Session_SessionDetail_CL\r\n    | where isnotempty(SessionClientVersion_s) and SessionBrokerType_s in (\"Citrix\")\r\n    | summarize SessionPublishedNameLatest = arg_max(TimeGenerated, SessionPublishedName_s) by SessionGUID_g\r\n    | summarize Count = count() by SessionPublishedName_s\r\n    | sort by Count\r\n    | limit 10\r\n    | summarize sum(Count)\r\n);\r\n\r\n\r\nuberAgent_Session_SessionDetail_CL\r\n| where isnotempty(SessionClientVersion_s) and SessionBrokerType_s in (\"Citrix\")\r\n| summarize SessionPublishedNameLatest = arg_max(TimeGenerated, SessionPublishedName_s) by SessionGUID_g\r\n| summarize Count = count() by SessionPublishedName_s\r\n| sort by Count {SortOrder}\r\n| limit 10\r\n| extend TotalCount\r\n| extend [\"Published Name (%)\"] = round(Count * 100.0 / TotalCount, 1)",
+              "size": 0,
+              "title": "Published names used to launch sessions (top 10)",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "barchart",
+              "tileSettings": {
+                "showBorder": false,
+                "titleContent": {
+                  "columnMatch": "SessionPublishedName_s",
+                  "formatter": 1
+                },
+                "leftContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "auto"
+                  },
+                  "numberFormat": {
+                    "unit": 17,
+                    "options": {
+                      "maximumSignificantDigits": 3,
+                      "maximumFractionDigits": 2
+                    }
+                  }
+                }
+              },
+              "graphSettings": {
+                "type": 0,
+                "topContent": {
+                  "columnMatch": "SessionPublishedName_s",
+                  "formatter": 1
+                },
+                "centerContent": {
+                  "columnMatch": "Count",
+                  "formatter": 1,
+                  "numberFormat": {
+                    "unit": 17,
+                    "options": {
+                      "maximumSignificantDigits": 3,
+                      "maximumFractionDigits": 2
+                    }
+                  }
+                }
+              },
+              "chartSettings": {
+                "xAxis": "SessionPublishedName_s",
+                "yAxis": [
+                  "Published Name (%)"
+                ],
+                "showMetrics": false,
+                "xSettings": {
+                  "numberFormatSettings": {
+                    "unit": 0,
+                    "options": {
+                      "style": "decimal",
+                      "useGrouping": true
+                    }
+                  }
+                },
+                "ySettings": {
+                  "numberFormatSettings": {
+                    "unit": 1,
+                    "options": {
+                      "style": "decimal",
+                      "useGrouping": true
+                    }
+                  },
+                  "label": "Published name percentage"
+                }
+              }
+            },
+            "name": "query - 8"
+          }
+        ]
+      },
+      "customWidth": "50",
+      "name": "Published app usage",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "\r\n\r\nuberAgent_CitrixSession_SessionConfig_CL\r\n| join (uberAgent_Session_SessionDetail_CL) on SessionGUID_g\r\n| summarize\r\narg_max(TimeGenerated,Computer), \r\narg_max(TimeGenerated, AudioActualPriority_s),\r\narg_max(TimeGenerated,AudioPolicyAllowMicrophoneRedirection_b),\r\narg_max(TimeGenerated,AudioPolicyAllowRedirection_b),\r\narg_max(TimeGenerated,AudioPolicyPriority_s),\r\narg_max(TimeGenerated,AudioPolicySoundQuality_s),\r\narg_max(TimeGenerated,CdmActualPriority_s),\r\narg_max(TimeGenerated,CdmPolicyAllowDriveRedirection_b),\r\narg_max(TimeGenerated,CdmPolicyReadOnly_b),\r\narg_max(TimeGenerated,CdmPolicyPriority_s),\r\narg_max(TimeGenerated,CdmVolumes_s),\r\narg_max(TimeGenerated,DisplayMode_d),\r\narg_max(TimeGenerated,ThinwirePolicyFps_d),\r\narg_max(TimeGenerated,ThinwirePolicyPriority_s),\r\narg_max(TimeGenerated,ThinwirePolicyUseHardwareEncoding_b),\r\narg_max(TimeGenerated,ThinwirePolicyUseVideoCodec_s),\r\narg_max(TimeGenerated,ThinwirePolicyVisualQuality_s),\r\narg_max(TimeGenerated,ThinwireActualPriority_s),\r\narg_max(TimeGenerated,ThinwireColorDepth_d),\r\narg_max(TimeGenerated,ThinwireComponentEncoder_s),\r\narg_max(TimeGenerated,ThinwireHardwareEncodeInUse_b),\r\narg_max(TimeGenerated,ThinwireVideoCodecType_s),\r\narg_max(TimeGenerated,ThinwireColorspace_s),\r\narg_max(TimeGenerated,ThinwireVideoCodecUse_s),\r\narg_max(TimeGenerated,NetworkPolicyAcceptSessionReliabilityConnections_b),\r\narg_max(TimeGenerated,NetworkPolicySessionReliabilityPort_d),\r\narg_max(TimeGenerated,NetworkPolicySessionReliabilityTimeout_d),\r\narg_max(TimeGenerated,NetworkPolicyICAListenerPortNumber_d),\r\narg_max(TimeGenerated,NetworkEdtMtu_d),\r\narg_max(TimeGenerated,NetworkConnectedVia_s),\r\narg_max(TimeGenerated,PrinterActualPriority_s),\r\narg_max(TimeGenerated,PrinterPolicyAllowRedirection_b),\r\narg_max(TimeGenerated, PrinterPolicyAutoCreateClientPrinters_d),\r\narg_max(TimeGenerated,PrinterPolicyPriority_s),\r\narg_max(TimeGenerated,PrinterSessionPrinter_s),\r\narg_max(TimeGenerated,USBActualPriority_s),\r\narg_max(TimeGenerated,USBPolicyAllowPNPRedirection_b),\r\narg_max(TimeGenerated,USBPolicyAllowUSBSupport_b),\r\narg_max(TimeGenerated,USBPolicyPriority_s),\r\narg_max(TimeGenerated,SessionUser_s),\r\narg_max(TimeGenerated,SessionFgBrowserActiveTabHost_s),\r\narg_max(TimeGenerated,TimeGenerated),\r\narg_max(TimeGenerated,SessionConnectionState_s),\r\narg_max(TimeGenerated,SessionTransportProtocols_s),\r\narg_max(TimeGenerated,SessionLogonTime_s),\r\nmake_set(SessionClientIp_s,10),\r\nmake_set(SessionClientPlatform_s,10),\r\nmake_set(SessionClientVersion_s,10),\r\nmake_set(SessionPublishedName_s,10),\r\nmake_set(SessionPublishedAppsCtx_s,10),\r\nmake_set(SessionEncryptionCtx_s,10)\r\nby SessionGUID_g\r\n| project \r\n[\"User\"] = SessionUser_s,\r\n[\"Host\"] = Computer,\r\n[\"Session Logon Time\"] = SessionLogonTime_s,\r\n[\"LastSeen\"] = TimeGenerated,\r\n[\"Last state\"] = SessionConnectionState_s,\r\n[\"Display mode\" ] = DisplayMode_d,\r\n[\"Transport protocols\"] = SessionTransportProtocols_s,\r\n[\"EDT MTU\"] = NetworkEdtMtu_d,\r\n[\"Connected via\"] = NetworkConnectedVia_s,\r\nSessionGUID_g\r\n//[\"Audio actual channel priority\"] = AudioActualPriority_s,\r\n//[\"Policy microphone redirection\"] = AudioPolicyAllowMicrophoneRedirection_b,\r\n//[\"Policy audio redirection\"] = AudioPolicyAllowRedirection_b,\r\n//[\"Policy audio channel priority\"] = AudioPolicyPriority_s,\r\n//[\"Policy sound quality\"] = AudioPolicySoundQuality_s,\r\n//[\"CDM actual channel priority\"] = CdmActualPriority_s,\r\n//[\"Policy client drive mapping\"] = CdmPolicyAllowDriveRedirection_b,\r\n//[\"Policy read-only client drive access\"] = CdmPolicyReadOnly_b,\r\n//[\"Policy cdm channel priority\"] = CdmPolicyPriority_s,\r\n//[\"Mapped volumes\"] = CdmVolumes_s,\r\n//[\"Policy thinwire FPS\"] = ThinwirePolicyFps_d,\r\n//[\"Policy thinwire channel priority\"] = ThinwirePolicyPriority_s,\r\n//[\"Policy thinwire hardware encoding\"] = ThinwirePolicyUseHardwareEncoding_b,\r\n//[\"Policy thinwire video codec\"] = ThinwirePolicyUseVideoCodec_s,\r\n//[\"Policy thinwire visual quality\"] = ThinwirePolicyVisualQuality_s,\r\n//[\"Thinwire actual channel priority\"] = ThinwireActualPriority_s,\r\n//[\"Thinwire color depth (bit)\"] = ThinwireColorDepth_d,\r\n//[\"Thinwire component encoder\"] = ThinwireComponentEncoder_s,\r\n//[\"Thinwire hardware encode\"] = ThinwireHardwareEncodeInUse_b,\r\n//[\"Thinwire video codec type\"] = ThinwireVideoCodecType_s,\r\n//[\"Thinwire color space\"] = ThinwireColorspace_s,\r\n//[\"Thinwire video codec usage\"] = ThinwireVideoCodecUse_s,\r\n//[\"Policy session reliability connections\"] = NetworkPolicyAcceptSessionReliabilityConnections_b,\r\n//[\"Policy session reliability port\"] = NetworkPolicySessionReliabilityPort_d,\r\n//[\"Policy session reliability timeout (s)\"] = NetworkPolicySessionReliabilityTimeout_d,\r\n//[\"Policy ICA listener port\"] = NetworkPolicyICAListenerPortNumber_d,\r\n//[\"Printer actual channel priority\"] = PrinterActualPriority_s,\r\n//[\"Policy allow printer redirection\"] = PrinterPolicyAllowRedirection_b,\r\n//[\"Policy auto-create client printers\"] = PrinterPolicyAutoCreateClientPrinters_d,\r\n//[\"Policy printer channel priority\"] = PrinterPolicyPriority_s,\r\n//[\"Mapped prninters\"] = PrinterSessionPrinter_s,\r\n//[\"USB actual channel priority\"] = USBActualPriority_s,\r\n//[\"Policy USB PNP redirection\"] = USBPolicyAllowPNPRedirection_b,\r\n//[\"Policy USB support\"] = USBPolicyAllowUSBSupport_b,\r\n//[\"Policy USB channel priority\"] = USBPolicyPriority_s\r\n",
+              "size": 0,
+              "title": "Data table",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "User",
+                    "formatter": 7,
+                    "formatOptions": {
+                      "linkTarget": "WorkbookTemplate",
+                      "workbookContext": {
+                        "componentIdSource": "workbook",
+                        "resourceIdsSource": "workbook",
+                        "templateIdSource": "static",
+                        "templateId": "/subscriptions/6acb58f7-163b-48ff-b133-8c258b4f14da/resourceGroups/KRS-RG1/providers/microsoft.insights/workbooks/c2b60e6a-a702-4703-92ff-3a0bbed5a028",
+                        "typeSource": "workbook",
+                        "gallerySource": "workbook",
+                        "locationSource": "default",
+                        "workbookName": "Sessions - Single User Detail",
+                        "passSpecificParams": true,
+                        "templateParameters": [
+                          {
+                            "name": "User",
+                            "source": "column",
+                            "value": "User"
+                          },
+                          {
+                            "name": "TimeRange",
+                            "source": "parameter",
+                            "value": "TimeRange"
+                          }
+                        ],
+                        "viewerMode": false
+                      }
+                    }
+                  }
+                ],
+                "filter": true,
+                "labelSettings": [
+                  {
+                    "columnId": "SessionGUID_g",
+                    "label": "Session ID"
+                  }
+                ]
+              }
+            },
+            "name": "query - 11"
+          }
+        ]
+      },
+      "name": "group - DataTable",
+      "styleSettings": {
+        "showBorder": true
+      }
+    }
+  ],
+  "fallbackResourceIds": [
+    "/subscriptions/6acb58f7-163b-48ff-b133-8c258b4f14da/resourcegroups/krs-rg1/providers/microsoft.operationalinsights/workspaces/uberagentws"
+  ],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
