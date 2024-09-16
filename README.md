@@ -16,9 +16,9 @@ Pre-built dashboards are available for the above platforms, backed by different 
 | Platform / Backend | Visualization |
 | ---------------- | ------------- |
 | [Splunk](https://docs.citrix.com/en-us/uberagent/current-release/installation/backend/configuring-splunk-http-event-collector)   | uberAgent UXM and ESA [Splunk apps](https://docs.citrix.com/en-us/uberagent/current-release/installation/installing-uberagent/installing-the-splunk-apps) |
-| [Elasticsearch](https://docs.citrix.com/en-us/uberagent/current-release/installation/backend/installing-elasticsearch) | [Kibana dashboards](https://github.com/citrix/uberagent-integrations/tree/main/elastic/kibana) |
-| [Azure Monitor (Log Analytics)](https://docs.citrix.com/en-us/uberagent/current-release/installation/backend/configuring-microsoft-azure-oms-log-analytics) | [Azure Workbooks](https://github.com/citrix/uberagent-integrations/tree/main/azure-monitor/azure-workbooks) |
-| [Azure Monitor (Log Analytics)](https://docs.citrix.com/en-us/uberagent/current-release/installation/backend/configuring-microsoft-azure-oms-log-analytics) | [Grafana](https://github.com/citrix/uberagent-integrations/tree/main/azure-monitor/grafana) |
-| [Azure Monitor (Log Analytics)](https://docs.citrix.com/en-us/uberagent/current-release/installation/backend/configuring-microsoft-azure-oms-log-analytics) | [PowerBI](https://github.com/citrix/uberagent-integrations/tree/main/azure-monitor/powerbi) |
-| Datadog | [Datadog Dashboards](https://github.com/citrix/uberagent-integrations/tree/main/datadog)
-| Dynatrace | [Dynatrace Dashboards](https://github.com/citrix/uberagent-integrations/tree/main/dynatrace)
+| [Elasticsearch](https://docs.citrix.com/en-us/uberagent/current-release/installation/backend/installing-elasticsearch) | [Kibana dashboards](elastic/kibana) |
+| [Azure Monitor (Log Analytics)](https://docs.citrix.com/en-us/uberagent/current-release/installation/backend/configuring-microsoft-azure-oms-log-analytics) | [Azure Workbooks](azure-monitor/azure-workbooks) |
+| [Azure Monitor (Log Analytics)](https://docs.citrix.com/en-us/uberagent/current-release/installation/backend/configuring-microsoft-azure-oms-log-analytics) | [Grafana](azure-monitor/grafana) |
+| [Azure Monitor (Log Analytics)](https://docs.citrix.com/en-us/uberagent/current-release/installation/backend/configuring-microsoft-azure-oms-log-analytics) | [PowerBI](azure-monitor/powerbi) |
+| Datadog | [Datadog Dashboards](datadog)
+| Dynatrace | [Dynatrace Dashboards](dynatrace)
