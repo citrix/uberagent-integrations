@@ -1,0 +1,984 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_GRAFANA-AZURE-MONITOR-DATASOURCE",
+      "label": "grafana-azure-monitor-datasource",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "grafana-azure-monitor-datasource",
+      "pluginName": "Azure Monitor"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.1.4"
+    },
+    {
+      "type": "datasource",
+      "id": "grafana-azure-monitor-datasource",
+      "name": "Azure Monitor",
+      "version": "11.1.4"
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "Citrix-uberAgent"
+      ],
+      "targetBlank": false,
+      "title": "Session Usage - Single User Detail",
+      "tooltip": "",
+      "type": "dashboards",
+      "url": ""
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "dashboardTime": false,
+            "query": "uberAgent_Session_SessionDetail_CL\r\n| where SessionUser_s == '${query0}'\r\n| summarize \r\n    SessionUser = tostring(make_set(SessionUser_s, 10)),\r\n    SessionProtocols = tostring(make_set(SessionProtocol_s, 10)),\r\n    SessionCount = dcount(SessionGUID_g),\r\n    SessionFgAppCount = dcount(SessionFgAppId_s),\r\n    HostCount =dcount(SessionFgBrowserActiveTabHost_s),\r\n    AvgSessionCPUUsagePercent = round(avg(SessionCPUUsagePercent_d),1),\r\n    AvgSessionIOPS = round(avg(SessionIOPS_d),1),\r\n    AvgSessionWorkingSetMB = round(avg(SessionWorkingSetMB_d))\r\n| union (\r\n    uberAgent_Application_UIDelay_CL\r\n    | where User_s ==  '${query0}'\r\n    | summarize \r\n        SumUIDelayMs = sum(UIDelayMs_d)\r\n    | project SumUIDelayS = round(SumUIDelayMs/1000)\r\n)\r\n| union (\r\n    uberAgent_Logon_LogonDetail_CL\r\n    | where User_s ==  '${query0}'\r\n    | summarize \r\n        LogonCount = dcount(SessionGUID_g),\r\n        AvgTotalLogonTimeMs = avg(TotalLogonTimeMs_d)\r\n    | project AvgTotalLogonTimeSRounded = iif(isnull(AvgTotalLogonTimeMs) or isnan(AvgTotalLogonTimeMs), \"n/a\", tostring(round(AvgTotalLogonTimeMs / 1000, 2)))\r\n)\r\n| union (\r\n    uberAgent_Application_Errors_CL\r\n    | where ProcUser_s ==  '${query0}'\r\n    | summarize \r\n        ErrorCount = count()\r\n)\r\n|summarize \r\n    User = '${query0}',\r\n    [\"#Sessions\"] = take_any(SessionCount),\r\n    [\"#Apps in foreground\"] = take_any(SessionFgAppCount),\r\n    [\"#Hosts\"] = take_any(HostCount),\r\n    [\"Avg. CPU (%)\"] = take_any(AvgSessionCPUUsagePercent),\r\n    [\"Avg. disk IOPS\"] = take_any(AvgSessionIOPS),\r\n    [\"Avg. RAM (MB)\"] = take_any(AvgSessionWorkingSetMB),\r\n    [\"Total UI wait time (s)\"] = take_any(SumUIDelayS),\r\n    [\"Avg. logon duration (s)\"] = take_any(AvgTotalLogonTimeSRounded),\r\n    [\"App errors\"] = take_any(ErrorCount)",
+            "resources": [
+              "$Workspace"
+            ],
+            "resultFormat": "logs"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A"
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg. ICA latency (ms)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 164
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last state"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 118
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Protocol"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 114
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg. #processes"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 132
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg. CPU (%)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 128
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg. IOPS"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 111
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg. IO latency (ms)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 153
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg. RAM (MB)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 128
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg. network (KB/s)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 163
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Host"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 152
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 58
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SessionGUID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 327
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Logon time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 242
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "dashboardTime": false,
+            "query": "uberAgent_Session_SessionDetail_CL\r\n| where SessionUser_s == '${query0}'\r\n| join kind=leftouter uberAgent_Logon_LogonDetail_CL on SessionGUID_g\r\n| summarize \r\n    arg_max(TimeGenerated,Computer),\r\n    arg_max(TimeGenerated,SessionGUID_g),\r\n    arg_max(TimeGenerated,SessionID_d),\r\n    arg_max(TimeGenerated,SessionProtocol_s),\r\n    arg_max(TimeGenerated,SessionConnectionState_s),\r\n    make_set(SessionClientName_s,10),\r\n    arg_max(TimeGenerated,TimeGenerated),\r\n    arg_max(TimeGenerated, SessionLogonTime_s),\r\n    AvgSessionProcessCount = avg(SessionProcessCount_d),\r\n    AvgSessionCPUUsagePercent = avg(SessionCPUUsagePercent_d),\r\n    AvgSessionIOPS = avg(SessionIOPS_d),\r\n    AvgSessionWorkingSetMB = avg(SessionWorkingSetMB_d),\r\n    AvgSessionNetKBPS = avg(SessionNetKBPS_d),\r\n    AvgSessionRpLatencyMs = avg(SessionRpLatencyMs2_d),\r\n    AvgSessionRoundTripTimeMs = avg(SessionRoundTripTimeMs_d),\r\n    SumSessionIOCount = sum(SessionIOCount_d),\r\n    TotalLogonTimeMs = sum(TotalLogonTimeMs_d)\r\nby SessionGUID_g\r\n|project \r\nSessionGUID = SessionGUID_g,\r\nHost = Computer,\r\nID = SessionID_d,\r\n[\"Logon time\"] = SessionLogonTime_s,\r\n[\"Logon duration (s)\"] = round(TotalLogonTimeMs/1000,2),\r\n[\"Last seen\"] = TimeGenerated,\r\n[\"Last state\"] = SessionConnectionState_s,\r\n[\"Protocol\"] = SessionProtocol_s,\r\n[\"Avg. #processes\"] = round(AvgSessionProcessCount),\r\n[\"Avg. CPU (%)\"] =round( AvgSessionCPUUsagePercent,1),\r\n[\"Avg. IOPS\"] = round(AvgSessionIOPS,1),\r\n[\"Avg. IO latency (ms)\"] = iff(isnan(round(AvgSessionRpLatencyMs/SumSessionIOCount,1)),'n/a',tostring(round(AvgSessionRpLatencyMs/SumSessionIOCount,1))),\r\n[\"Avg. RAM (MB)\"] = round(AvgSessionWorkingSetMB),\r\n[\"Avg. network (KB/s)\"] = round(AvgSessionNetKBPS,1),\r\n[\"Avg. ICA latency (ms)\"] = iff(isnan(AvgSessionRoundTripTimeMs),'n/a',tostring(round(AvgSessionRoundTripTimeMs,1))),\r\n[\"Remoting clients\"] = set_SessionClientName_s\r\n| sort by ['Logon time'] desc ",
+            "resources": [
+              "$Workspace"
+            ],
+            "resultFormat": "logs"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A"
+        }
+      ],
+      "title": "Sessions",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 17,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "dashboardTime": false,
+            "query": "\r\nuberAgent_CitrixSession_SessionConfig_CL\r\n|where SessionUser_s == '${query0}'\r\n| join kind=leftouter uberAgent_Session_SessionDetail_CL on SessionGUID_g\r\n| summarize \r\n    arg_max(TimeGenerated,CdmVolumes_s),\r\n    arg_max(TimeGenerated,DisplayMode_d),\r\n    arg_max(TimeGenerated,ThinwireColorDepth_d),\r\n    arg_max(TimeGenerated,ThinwireComponentEncoder_s),\r\n    arg_max(TimeGenerated,ThinwireHardwareEncodeInUse_b),\r\n    arg_max(TimeGenerated,ThinwireVideoCodecType_s),\r\n    arg_max(TimeGenerated,ThinwireColorspace_s),\r\n    arg_max(TimeGenerated,ThinwireVideoCodecUse_s),\r\n    arg_max(TimeGenerated,NetworkEdtMtu_d),\r\n    arg_max(TimeGenerated,NetworkConnectedVia_s),\r\n    arg_max(TimeGenerated,PrinterSessionPrinter_s),\r\n    arg_max(TimeGenerated,AudioActualPriority_s),\r\n    arg_max(TimeGenerated,CdmActualPriority_s),\r\n    arg_max(TimeGenerated,PrinterActualPriority_s),\r\n    arg_max(TimeGenerated,USBActualPriority_s),\r\n    arg_max(TimeGenerated,ThinwireActualPriority_s),\r\n    arg_max(TimeGenerated,SessionUser_s),\r\n    arg_max(TimeGenerated,Computer),\r\n    arg_max(TimeGenerated,SessionTransportProtocols_s)\r\nby SessionUser_s\r\n| project \r\n[\"Mapped volumes\"] = replace_string(CdmVolumes_s, \";\",\" , \"),\r\n[\"Display mode\" ] = DisplayMode_d,\r\n[\"Thinwire color depth (bit)\"] = ThinwireColorDepth_d,\r\n[\"Thinwire component encoder\"] = ThinwireComponentEncoder_s,\r\n[\"Thinwire hardware encode\"] = ThinwireHardwareEncodeInUse_b,\r\n[\"Thinwire video codec type\"] = ThinwireVideoCodecType_s,\r\n[\"Thinwire color space\"] = ThinwireColorspace_s,\r\n[\"Thinwire video codec usage\"] = ThinwireVideoCodecUse_s,\r\n[\"EDT MTU\"] = NetworkEdtMtu_d,\r\n[\"Connected via\"] = NetworkConnectedVia_s,\r\n[\"Mapped printers\"] = replace_string(PrinterSessionPrinter_s, \";\",\" , \"),\r\n[\"Audio channel actual priority\"] = AudioActualPriority_s,\r\n[\"CDM channel actual priority\"] = CdmActualPriority_s,\r\n[\"Printer channel actual priority\"] = PrinterActualPriority_s,\r\n[\"USB channel actual priority\"] = USBActualPriority_s,\r\n[\"Thinwire channel actual priority\"] = ThinwireActualPriority_s,\r\n[\"Transport protocols\"] = SessionTransportProtocols_s,\r\nUser = SessionUser_s,\r\nHost = Computer\r\n| evaluate narrow()\r\n| project Setting = Column, [\"${query0}\"] = Value\r\n| sort by Setting asc\r\n",
+            "resources": [
+              "$Workspace"
+            ],
+            "resultFormat": "logs"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A"
+        }
+      ],
+      "title": "Citrix settings (last seen values)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "dashboardTime": false,
+            "query": "uberAgent_CitrixSession_SessionConfig_CL\r\n|where SessionUser_s == '${query0}'\r\n| join kind=leftouter uberAgent_Session_SessionDetail_CL on SessionGUID_g\r\n| summarize \r\narg_max(TimeGenerated,AudioPolicyAllowMicrophoneRedirection_b),\r\narg_max(TimeGenerated,AudioPolicyAllowRedirection_b),\r\narg_max(TimeGenerated,AudioPolicyPriority_s),\r\narg_max(TimeGenerated,AudioPolicySoundQuality_s),\r\narg_max(TimeGenerated,CdmPolicyAllowDriveRedirection_b),\r\narg_max(TimeGenerated,CdmPolicyReadOnly_b),\r\narg_max(TimeGenerated,CdmPolicyPriority_s),\r\narg_max(TimeGenerated,ThinwirePolicyFps_d),\r\narg_max(TimeGenerated,ThinwirePolicyPriority_s),\r\narg_max(TimeGenerated,ThinwirePolicyUseHardwareEncoding_b),\r\narg_max(TimeGenerated,ThinwirePolicyUseVideoCodec_s),\r\narg_max(TimeGenerated,ThinwirePolicyVisualQuality_s),\r\narg_max(TimeGenerated,NetworkPolicyAcceptSessionReliabilityConnections_b),\r\narg_max(TimeGenerated,NetworkPolicySessionReliabilityPort_d),\r\narg_max(TimeGenerated,NetworkPolicySessionReliabilityTimeout_d),\r\narg_max(TimeGenerated,NetworkPolicyICAListenerPortNumber_d),\r\narg_max(TimeGenerated,PrinterPolicyAllowRedirection_b),\r\narg_max(TimeGenerated,PrinterPolicyAutoCreateClientPrinters_d),\r\narg_max(TimeGenerated,PrinterPolicyPriority_s),\r\narg_max(TimeGenerated,USBPolicyAllowPNPRedirection_b),\r\narg_max(TimeGenerated,USBPolicyAllowUSBSupport_b),\r\narg_max(TimeGenerated,USBPolicyPriority_s),\r\narg_max(TimeGenerated,SessionUser_s),\r\narg_max(TimeGenerated,Computer),\r\narg_max(TimeGenerated,SessionLogonTime_s)\r\nby SessionUser_s\r\n| project \r\n[\"Microphone redirection\"]= AudioPolicyAllowMicrophoneRedirection_b,\r\n[\"Audio redirection\"]= AudioPolicyAllowRedirection_b,\r\n[\"Audio channel priority\"]= AudioPolicyPriority_s,\r\n[\"Sound quality\"]= AudioPolicySoundQuality_s,\r\n[\"Client drive mapping\"]= CdmPolicyAllowDriveRedirection_b,\r\n[\"Read-only client drive access\"]= CdmPolicyReadOnly_b,\r\n[\"CDM channel priority\"]= CdmPolicyPriority_s,\r\n[\"Thinwire FPS\"]= toint(ThinwirePolicyFps_d),\r\n[\"Thinwire channel priority\"]= ThinwirePolicyPriority_s,\r\n[\"Thinwire hardware encoding\"]= ThinwirePolicyUseHardwareEncoding_b,\r\n[\"Thinwire video codec\"]= ThinwirePolicyUseVideoCodec_s,\r\n[\"Thinwire visual quality\"]= ThinwirePolicyVisualQuality_s,\r\n[\"Session reliability connections\"]= NetworkPolicyAcceptSessionReliabilityConnections_b,\r\n[\"Session reliability port\"]= toint(NetworkPolicySessionReliabilityPort_d),\r\n[\"Session reliability timeout (s)\"]= toint(NetworkPolicySessionReliabilityTimeout_d),\r\n[\"ICA listener port\"]= toint(NetworkPolicyICAListenerPortNumber_d),\r\n[\"Printer redirection\"]= PrinterPolicyAllowRedirection_b,\r\n[\"Printer channel priority\"]= PrinterPolicyPriority_s,\r\n[\"Auto-create client printers\"]= toint(PrinterPolicyAutoCreateClientPrinters_d),\r\n[\"USB PNP redirection\"]= USBPolicyAllowPNPRedirection_b,\r\n[\"USB support\"]= USBPolicyAllowUSBSupport_b,\r\n[\"USB channel priority\"]= USBPolicyPriority_s,\r\n[\"Logon time\"]=SessionLogonTime_s,\r\nUser = SessionUser_s,\r\nHost = Computer\r\n| evaluate narrow()\r\n| extend Value = case(Value == \"true\", \"Allowed\", Value == \"false\", \"Disallowed\", Value)\r\n| project [\"Policy\"] = Column, [\"${query0}\"] = Value\r\n| sort by Policy asc\r\n",
+            "resources": [
+              "$Workspace"
+            ],
+            "resultFormat": "logs"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A"
+        }
+      ],
+      "title": "Citrix policies (last seen values)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Latency (ms)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Send volume (MB)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Data volume (MB)"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 50
+              },
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "group": "Override 2",
+                  "mode": "normal"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Receive volume (MB)"
+            },
+            "properties": [
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              },
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "group": "Override 1",
+                  "mode": "normal"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 50
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 35
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "dashboardTime": true,
+            "query": "uberAgent_Process_NetworkTargetPerformance_CL\r\n| where ProcUser_s == '${query0}'\r\n| summarize \r\n    SumNetTargetSendMB = sum(NetTargetSendMB_d),\r\n    SumNetTargetReceiveMB = sum(NetTargetReceiveMB_d),\r\n    SumNetTargetSendLatencyCount = sum(NetTargetSendLatencyCount_d),\r\n    SumNetTargetSendDurationMs = sum(NetTargetSendLatencyMs_d)\r\n    by bin(TimeGenerated, 1h)\r\n| extend [\"Send volume (MB)\"] = SumNetTargetSendMB,\r\n         [\"Receive volume (MB)\"] = SumNetTargetReceiveMB,\r\n         [\"Avg. send latency (ms)\"] = round(SumNetTargetSendDurationMs / SumNetTargetSendLatencyCount, 1)\r\n| sort by TimeGenerated asc\r\n| project TimeGenerated, [\"Avg. send latency (ms)\"],  [\"Receive volume (MB)\"], [\"Send volume (MB)\"]\r\n",
+            "resources": [
+              "$Workspace"
+            ],
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A"
+        }
+      ],
+      "title": "Network data - Receive Volume over time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "CPU (%)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg. RAM (MB)"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "RAM (MB)"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 50
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 35
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "dashboardTime": true,
+            "query": "uberAgent_Process_ProcessDetail_CL\r\n| where ProcUser_s == '${query0}'\r\n| summarize \r\n    SumProcCPUPercent = sum(ProcCPUPercent_d),\r\n    SumProcWorkingSetMB = sum(ProcWorkingSetMB_d)\r\n    by bin(TimeGenerated, 1h), Computer\r\n| summarize \r\n    AvgRAMMB = round(avg(SumProcWorkingSetMB), 1),\r\n    AvgCPUPercent = round(avg(SumProcCPUPercent), 1)\r\n    by bin(TimeGenerated, 1h)\r\n| sort by TimeGenerated asc \r\n| project TimeGenerated, [\"Avg. CPU (%)\"] = AvgCPUPercent, [\"Avg. RAM (MB)\"] = AvgRAMMB",
+            "resources": [
+              "$Workspace"
+            ],
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU and Memory over time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 43
+      },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "dashboardTime": true,
+            "query": "let ProcDetails = uberAgent_Process_ProcessDetail_CL\r\n| where ProcUser_s =~ '${query0}'\r\n|  summarize\r\n    processNames = make_set(ProcName_s,20),\r\n    sum(ProcCPUPercent_d),\r\n    sum(ProcIOPSRead_d),\r\n    sum(ProcIOReadCount_d),\r\n    sum(ProcWorkingSetMB_d),\r\n    sum(ProcNetKBPS_d),\r\n    sum(ProcIOLatencyReadMs2_d),\r\n    sum(ProcIOLatencyWriteMs2_d)\r\n    by AppId_s, TimeGenerated, Computer\r\n| summarize \r\n    [\"Process name(s)\"]= make_set(processNames,20),\r\n    AvgProcCPUPercent = avg(sum_ProcCPUPercent_d),\r\n    AvgProcIOPS = avg(sum_ProcIOPSRead_d),\r\n    SumProcIOCount = sum(sum_ProcIOReadCount_d),\r\n    AvgProcWorkingSetMB = sum(sum_ProcWorkingSetMB_d),\r\n    AvgProcNetKBPS = avg(sum_ProcNetKBPS_d)\r\n    by AppId_s;\r\n\r\n\r\n\r\nlet uiDelayDetails = uberAgent_Application_UIDelay_CL\r\n| where User_s == @\"{User}\"\r\n| summarize\r\n    UIDelayMs = sum(UIDelayMs_d)\r\n    by AppId_s;\r\n\r\nlet latencyDetails = uberAgent_Process_NetworkTargetPerformance_CL\r\n| where ProcUser_s == @\"{User}\"\r\n| summarize\r\n    Latency = avg(NetTargetSendLatencyMs_d)\r\n    by AppId_s;\r\n\r\n\r\n\r\nProcDetails\r\n| join kind=leftouter uiDelayDetails on AppId_s\r\n| join kind=leftouter latencyDetails on AppId_s\r\n| project\r\n    [\"App Name\"] = AppId_s,\r\n    [\"Process name(s)\"] = tostring([\"Process name(s)\"]),\r\n    [\"Avg. CPU (%)\"] = round(AvgProcCPUPercent, 1),\r\n    [\"Avg. IOPS\"] = round (AvgProcIOPS,1),\r\n    [\"Avg. RAM (MB)\"] = round(AvgProcWorkingSetMB, 0),\r\n    [\"Avg. net thruput (KB/s)\"] = round (AvgProcNetKBPS,1),\r\n    [\"Avg. net latency (ms)\"] = iff(isnan(round(Latency,1)),\"n/a\",tostring(round(Latency,1))),\r\n    [\"UI unresponsiveness (s)\"] = round(UIDelayMs/1000,1)\r\n| sort by tolower([\"App Name\"]) asc;\r\n",
+            "resources": [
+              "$Workspace"
+            ],
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A"
+        }
+      ],
+      "title": "Applications",
+      "type": "table"
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": [
+    "Citrix-uberAgent"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "sys",
+          "value": "sys"
+        },
+        "hide": 0,
+        "label": "Session User",
+        "name": "query0",
+        "options": [
+          {
+            "selected": true,
+            "text": "sys",
+            "value": "sys"
+          }
+        ],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "Subscription",
+        "options": [],
+        "query": {
+          "azureLogAnalytics": {
+            "query": "",
+            "resources": []
+          },
+          "queryType": "Azure Subscriptions",
+          "refId": "A"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "Workspace",
+        "options": [],
+        "query": {
+          "azureLogAnalytics": {
+            "query": "",
+            "resources": []
+          },
+          "queryType": "Azure Workspaces",
+          "refId": "A",
+          "subscription": "$Subscription"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Session Usage - Single User Detail",
+  "uid": "cdwr6jji2vta8c",
+  "version": 67,
+  "weekStart": ""
+}
