@@ -1,0 +1,908 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_GRAFANA-AZURE-MONITOR-DATASOURCE",
+      "label": "grafana-azure-monitor-datasource",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "grafana-azure-monitor-datasource",
+      "pluginName": "Azure Monitor"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "barchart",
+      "name": "Bar chart",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.1.4"
+    },
+    {
+      "type": "datasource",
+      "id": "grafana-azure-monitor-datasource",
+      "name": "Azure Monitor",
+      "version": "11.1.4"
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "Citrix-uberAgent"
+      ],
+      "targetBlank": false,
+      "title": "Usage Visualization - Machines",
+      "tooltip": "",
+      "type": "dashboards",
+      "url": ""
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "dashboardTime": true,
+            "query": "\r\nlet SiteCount = uberAgent_Citrix_Machines_CL\r\n| where SiteGuid_g != \"\"\r\n| summarize SiteCount = dcount(SiteGuid_g), sl=1;\r\n\r\nlet VDAStats = uberAgent_Citrix_Machines_CL\r\n| extend isVDA = iff(MachineRole_d in (0, 2), 1, 0)\r\n| extend isDDC = iff(MachineRole_d in (1, 2), 1, 0)\r\n| extend isRegistered = iff(CurrentRegistrationState_d == 1, 1, 0)\r\n| where isVDA == 1 and isnotempty(SiteGuid_g) and isnotempty(NameHost_s)\r\n| summarize \r\n    CatalogId = arg_max(TimeGenerated, CatalogId_g),\r\n    DesktopGroupId = arg_max(TimeGenerated, DesktopGroupId_g),\r\n    IsRegisteredNumber = arg_max(TimeGenerated, isRegistered)\r\n    by Id_g\r\n| extend HasDeliveryGroup = iff(isnotempty(DesktopGroupId), 1, 0)\r\n| project CatalogId, DesktopGroupId, HasDeliveryGroup, isRegistered\r\n| summarize \r\n    VDACount = count(),\r\n    VDAsWithDeliveryGroup = sum(HasDeliveryGroup),\r\n    RegisteredCount = sum(isRegistered)\r\n| extend \r\n    UnregisteredCount = VDACount - RegisteredCount,\r\n    RegisteredPercent =  round(RegisteredCount * 100.0 / VDACount, 1),\r\n    sl = 1;\r\n\r\n\r\nlet DDCCount = uberAgent_Citrix_Machines_CL\r\n| extend isDDC = iff(MachineRole_d in (1, 2), 1, 0)\r\n| where isDDC == 1 and isnotempty(SiteGuid_g)\r\n| summarize DDCCount = count(), sl=1;\r\n\r\nlet CatalogCount = uberAgent_Citrix_Catalogs_CL\r\n| where SiteGuid_g != \"\" and Id_g != \"\"\r\n| summarize CatalogCount = dcount(Id_g), sl=1;\r\n\r\nlet DeliveryGroupCount = uberAgent_Citrix_DesktopGroups_CL\r\n| where SiteGuid_g != \"\" and Id_g != \"\"\r\n| summarize DeliveryGroupCount = dcount(Id_g), sl=1;\r\n\r\nSiteCount\r\n| join kind=inner (VDAStats) on $left.sl == $right.sl\r\n| join kind=inner (DDCCount) on $left.sl == $right.sl\r\n| join kind=inner (CatalogCount) on $left.sl == $right.sl\r\n| join kind=inner (DeliveryGroupCount) on $left.sl == $right.sl\r\n| project SiteCount, CatalogCount, DeliveryGroupCount, DDCCount, VDACount, VDAsWithDeliveryGroup, RegisteredCount, UnregisteredCount, RegisteredPercent\r\n",
+            "resources": [
+              "$Workspace"
+            ],
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "B"
+        }
+      ],
+      "title": "Overview",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 90,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "id": 9,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.5,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "never",
+        "stacking": "normal",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 200
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "dashboardTime": true,
+            "query": "let groupBy = \"${GroupBy}\";\r\nuberAgent_Citrix_Machines_CL\r\n| extend isRegistered = iff(CurrentRegistrationState_d == 1, 1, 0)\r\n| extend dynamicGroup = case(groupBy == \"Machine Catalog\", CatalogDisplayName_s, groupBy == \"Delivery Group\", DesktopGroupDisplayName_s, \"Unknown\")\r\n| where isRegistered == 1 and isnotempty(SiteGuid_g) and isnotempty(CatalogId_g) and isnotempty(DesktopGroupId_g) and isnotempty(NameHost_s)\r\n| summarize RegisteredCount = dcount(Id_g) by dynamicGroup, bin(TimeGenerated, 1m)\r\n| project TimeGenerated, dynamicGroup\r\n| evaluate pivot(dynamicGroup)\r\n| sort by TimeGenerated asc \r\n",
+            "resources": [
+              "$Workspace"
+            ],
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A"
+        }
+      ],
+      "title": "Machine registration count over time",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 90,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 13,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.5,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "never",
+        "stacking": "normal",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 200
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "dashboardTime": false,
+            "query": "let groupBy = \"${GroupBy}\";\r\nuberAgent_Citrix_Machines_CL \r\n| extend isVDA = iff(MachineRole_d in (0, 2), 1, 0)\r\n| extend dynamicGroup = case(groupBy == \"Machine Catalog\", CatalogDisplayName_s, groupBy == \"Delivery Group\", DesktopGroupDisplayName_s, \"Unknown\")\r\n| where \r\n    isVDA == 1 and \r\n     SiteGuid_g != \"\" and CatalogId_g != \"\" and DesktopGroupId_g != \"\"\r\n| summarize CurrentSessionCount = avg(CurrentSessionCount_d), dynamicGroup = arg_max(dynamicGroup, TimeGenerated) by bin(TimeGenerated, 1m), Id_g\r\n| summarize CurrentSessionCount = sum(CurrentSessionCount) by bin(TimeGenerated, 1m), dynamicGroup\r\n| project TimeGenerated, dynamicGroup, CurrentSessionCount\r\n| evaluate pivot(dynamicGroup, sum(CurrentSessionCount))\r\n| sort by TimeGenerated asc ",
+            "resources": [
+              "$Workspace"
+            ],
+            "resultFormat": "logs"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A"
+        }
+      ],
+      "title": "User session count over time",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "",
+              "url": "/d/fdw5kmcw751xcd/usage-visualization-machines?orgId=1&var-GroupBy=Machine+Catalog&editIndex=0&from=${__from}&to=${__to}&viewPanel=10&var-MachineFilter=${__data.fields[\"Machine catalog\"]}"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "id": 6,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "dashboardTime": true,
+            "query": "let CatalogDetails = uberAgent_Citrix_Catalogs_CL \r\n| where isnotempty(SiteGuid_g) and isnotempty(Id_g)\r\n| extend ProvisioningTypeDisplayName = case(ProvisioningType_d == 0, \"Unknown\", \r\n                       ProvisioningType_d == 1, \"MCS\", \r\n                       ProvisioningType_d == 2, \"PVS\", \r\n                       ProvisioningType_d == 3, \"Manual\", \r\n                       \"NotSupported\")\r\n| extend SessionSupportDisplayName = case(SessionSupport_d == 0, \"Unknown\", \r\n                       SessionSupport_d == 1, \"SingleSession\", \r\n                       SessionSupport_d == 2, \"MultiSession\", \r\n                       \"NotSupported\")\r\n| extend AllocationTypeDisplayName = case(AllocationType_d == 0, \"Unknown\", \r\n                       AllocationType_d == 1, \"Static\", \r\n                       AllocationType_d == 2, \"Random\", \r\n                       AllocationType_d == 3, \"Permanent\", \r\n                       \"NotSupported\")\r\n| extend PersistentUserChangesDisplayName = case(PersistentUserChanges_d == 0, \"Unknown\", \r\n                       PersistentUserChanges_d == 1, \"Discard\", \r\n                       PersistentUserChanges_d == 2, \"OnLocal\", \r\n                       PersistentUserChanges_d == 3, \"OnPvd\", \r\n                       \"NotSupported\")\r\n| summarize \r\n     arg_max(TimeGenerated, Name_s),\r\n    arg_max(TimeGenerated, ProvisioningTypeDisplayName),\r\n    arg_max(TimeGenerated, SessionSupportDisplayName),\r\n     arg_max(TimeGenerated, AllocationTypeDisplayName),\r\n    arg_max(TimeGenerated, PersistentUserChangesDisplayName)\r\n    \r\nby Id_g\r\n| project CatalogId = Id_g, [\"Machine catalog\"] = Name_s,\r\n[\"Provisioning type\"] = ProvisioningTypeDisplayName,\r\n[\"Session support\"] = SessionSupportDisplayName,\r\n[\"Allocation type\"] = AllocationTypeDisplayName,\r\n[\"Persistent user changes\"] = PersistentUserChangesDisplayName;\r\n\r\n\r\nlet Citrix_Machines = uberAgent_Citrix_Machines_CL\r\n| extend isVDA = iff(MachineRole_d in (0, 2), 1, 0)\r\n| extend isDDC = iff(MachineRole_d in (1, 2), 1, 0)\r\n| extend isRegistered = iff(CurrentRegistrationState_d == 1, 1, 0);\r\n\r\n\r\nlet MachineStats = Citrix_Machines \r\n| where isnotempty(SiteGuid_g )\r\n| summarize \r\n    VDACount = arg_max(TimeGenerated, isVDA),\r\n    RegisteredCount = arg_max(TimeGenerated, isRegistered)\r\nby CatalogId_g\r\n| project CatalogId = CatalogId_g, VDACount = isVDA, RegisteredCount = isRegistered;\r\n\r\n\r\nlet JoinedData = CatalogDetails\r\n| join kind=inner (MachineStats) on CatalogId\r\n| extend [\"%Registered\"] = round(RegisteredCount * 100.0 / VDACount, 1)\r\n| project \r\n    [\"Machine catalog\"],\r\n    [\"Session support\"],\r\n    [\"Provisioning type\"],\r\n    [\"Allocation type\"],\r\n    [\"Persistent user changes\"],\r\n    [\"#VDAs\"] = iff(isnull(VDACount), 0, VDACount),\r\n    [\"#Registered\"] = iff(isnull(RegisteredCount), 0, RegisteredCount),\r\n    [\"%Registered\"] = iff(isnull([\"%Registered\"]), 0.0, [\"%Registered\"])\r\n| order by [\"Machine catalog\"] asc;\r\n\r\nJoinedData",
+            "resources": [
+              "$Workspace"
+            ],
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A"
+        }
+      ],
+      "title": "Machine catalogs",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "",
+              "url": "/d/fdw5kmcw751xcd/usage-visualization-machines?orgId=1&var-GroupBy=Machine+Catalog&editIndex=0&from=${__from}&to=${__to}&viewPanel=11&var-MachineFilter=${__data.fields[\"Delivery group\"]}"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "dashboardTime": true,
+            "query": "let DesktopGroupDetails = uberAgent_Citrix_DesktopGroups_CL\r\n| where isnotempty(SiteGuid_g) and isnotempty(Id_g)\r\n| extend SessionSupportDisplayName = case(SessionSupport_d == 0, \"Unknown\", \r\n                       SessionSupport_d == 1, \"SingleSession\", \r\n                       SessionSupport_d == 2, \"MultiSession\", \r\n                       \"NotSupported\")\r\n| extend DesktopKindDisplayName = case(DesktopKind_d == 0, \"Private\", \r\n                       DesktopKind_d == 1, \"Shared\", \r\n                       \"NotSupported\")\r\n| summarize \r\n    arg_max(TimeGenerated, Name_s),\r\n    arg_max(TimeGenerated, DesktopKindDisplayName),\r\n    arg_max(TimeGenerated, SessionSupportDisplayName),\r\n    arg_max(TimeGenerated, IsRemotePC_b)\r\n    by Id_g\r\n| project \r\n    DesktopGroupId = Id_g,\r\n    [\"Delivery group\"] = Name_s,\r\n    [\"Allocation type\"] = DesktopKindDisplayName,\r\n    [\"Session support\"] = SessionSupportDisplayName,\r\n    [\"Remote PC?\"] = IsRemotePC_b;\r\n\r\n// DesktopGroupDetails\r\n\r\nlet Citrix_Machines = uberAgent_Citrix_Machines_CL\r\n| extend isVDA = iff(MachineRole_d in (0, 2), 1, 0)\r\n| extend isDDC = iff(MachineRole_d in (1, 2), 1, 0)\r\n| extend isRegistered = iff(CurrentRegistrationState_d == 1, 1, 0);\r\n\r\n\r\nlet MachineStats = Citrix_Machines \r\n| where isnotempty(SiteGuid_g )\r\n| summarize \r\n    VDACount = arg_max(TimeGenerated, isVDA),\r\n    RegisteredCount = arg_max(TimeGenerated, isRegistered)\r\nby DesktopGroupId_g\r\n| project DesktopGroupId = DesktopGroupId_g, VDACount = isVDA, RegisteredCount = isRegistered;\r\n\r\n// MachineStats\r\n\r\n\r\nlet JoinedData = DesktopGroupDetails\r\n| join kind=leftouter MachineStats on DesktopGroupId\r\n| extend [\"%Registered\"] = round(RegisteredCount * 100.0 / VDACount, 1)\r\n| project \r\n    [\"Delivery group\"],\r\n    [\"Session support\"],\r\n    [\"Allocation type\"],\r\n    [\"Remote PC?\"],\r\n    [\"#VDAs\"] = iff(isnull(VDACount), 0, VDACount),\r\n    [\"#Registered\"] = iff(isnull(RegisteredCount), 0, RegisteredCount),\r\n    [\"%Registered\"] = iff(isnull([\"%Registered\"]), 0.0, [\"%Registered\"])\r\n| order by \"Delivery group\" asc;\r\n\r\nJoinedData",
+            "resources": [
+              "$Workspace"
+            ],
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A"
+        }
+      ],
+      "title": "Delivery groups",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.1.4",
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "dashboardTime": false,
+            "query": "uberAgent_Citrix_Machines_CL\r\n| extend isVDA = iff(MachineRole_d in (0, 2), 1, 0)\r\n| extend isDDC = iff(MachineRole_d in (1, 2), 1, 0)\r\n| extend isRegistered = iff(CurrentRegistrationState_d == 1, 1, 0)\r\n| extend FaultStateDisplayName = case(FaultState_d == 0, \"Unknown\", \r\n                       FaultState_d == 1, \"None\", \r\n                       FaultState_d == 2, \"FailedToStart\",\r\n                       FaultState_d == 3, \"StuckOnBoot\",\r\n                       FaultState_d == 4, \"Unregistered\", \r\n                       FaultState_d == 5, \"MaxCapacity\",\r\n                       \"NotSupported\")\r\n| where isRegistered == 0 and isDDC == 0 and isnotempty(SiteGuid_g) and isnotempty(NameHost_s)\r\n| summarize \r\n    arg_max(TimeGenerated, IsInMaintenanceMode_b),\r\n    arg_max(TimeGenerated, SiteName_s),\r\n    arg_max(TimeGenerated, CatalogDisplayName_s),\r\n    arg_max(TimeGenerated, DesktopGroupDisplayName_s),\r\n    arg_max(TimeGenerated, FaultStateDisplayName),\r\n    arg_max(TimeGenerated, LastDeregisteredCode_d),\r\n    arg_max(TimeGenerated, LastDeregisteredDate_s),\r\n    arg_max(TimeGenerated, RegistrationStateChangeDate_s),\r\n    arg_max(TimeGenerated, AgentVersion_s),\r\n    arg_max(TimeGenerated, Sid_s),\r\n    arg_max(TimeGenerated, CatalogId_g),\r\n    arg_max(TimeGenerated, DesktopGroupId_g)\r\n    by Name_s\r\n| project \r\n    Name_s,\r\n    [\"Maint. mode?\"] = IsInMaintenanceMode_b,\r\n    [\"Site\"] = SiteName_s,\r\n    [\"Machine catalog\"] = CatalogDisplayName_s,\r\n    [\"Delivery group\"] = DesktopGroupDisplayName_s,\r\n    [\"Fault state\"] = FaultStateDisplayName,\r\n    [\"Last deregistered code\"] = LastDeregisteredCode_d,\r\n    [\"Last deregistered date\"] = LastDeregisteredDate_s,\r\n    [\"Registration change date\"] = RegistrationStateChangeDate_s,\r\n    [\"VDA version\"] = AgentVersion_s,\r\n    [\"Sid\"] = Sid_s",
+            "resources": [
+              "$Workspace"
+            ],
+            "resultFormat": "logs"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A"
+        }
+      ],
+      "title": "Unregistered machines",
+      "type": "table"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 12,
+      "panels": [
+        {
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "inspect": false
+              },
+              "links": [
+                {
+                  "title": "",
+                  "url": "d/bdwuzhx8er85ce/machine-usage-single-machine-details?orgId=1&var-MachineName=${__data.fields.Name}﻿&from=﻿${__from}﻿&to=﻿${__to}﻿&var-Workspace=$Workspace"
+                }
+              ],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 24,
+            "x": 0,
+            "y": 26
+          },
+          "id": 10,
+          "maxPerRow": 12,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "11.1.4",
+          "repeat": "MachineFilter",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "azureLogAnalytics": {
+                "dashboardTime": true,
+                "query": "let groupBy = \"${MachineFilter}\";\r\nuberAgent_Citrix_Machines_CL \r\n| extend isRegistered = iff(CurrentRegistrationState_d == 1, 1, 0)\r\n| where isnotempty(NameHost_s) and CatalogDisplayName_s == groupBy and isnotempty(SiteGuid_g)\r\n| join kind=inner uberAgent_System_MachineInventory_CL on Computer\r\n| summarize \r\n    arg_max(TimeGenerated, DesktopGroupDisplayName_s),\r\n    arg_max(TimeGenerated, isRegistered),\r\n    arg_max(TimeGenerated, IsInMaintenanceMode_b),\r\n    arg_max(TimeGenerated, EffectiveLoadIndex_d),\r\n    arg_max(TimeGenerated, CurrentSessionCount_d),\r\n    arg_max(TimeGenerated, CPUCoresLogical_d),\r\n    arg_max(TimeGenerated, RAMSizeGB_d),\r\n    arg_max(TimeGenerated, HwIsVirtualMachine_b),\r\n    arg_max(TimeGenerated, HwHypervisorVendor_s),\r\n    arg_max(TimeGenerated, HwModel_s),\r\n    arg_max(TimeGenerated, OsVersion_s),\r\n    arg_max(TimeGenerated, OsBuild_d),\r\n    arg_max(TimeGenerated, AgentVersion_s),\r\n    TagsSplit = make_list(Tags_s)\r\n    by NameHost_s\r\n| extend Tags = strcat_array(TagsSplit, \", \")\r\n| project \r\n    Name = NameHost_s,\r\n    [\"Delivery group\"] = DesktopGroupDisplayName_s,\r\n    [\"Registered?\"] = isRegistered,\r\n    [\"Maint. mode?\"] = IsInMaintenanceMode_b,\r\n    [\"Load index\"] = EffectiveLoadIndex_d,\r\n    [\"#Sessions\"] = CurrentSessionCount_d,\r\n    [\"#CPU cores\"] = CPUCoresLogical_d,\r\n    [\"RAM (GB)\"] = RAMSizeGB_d,\r\n    [\"Is VM?\"] = HwIsVirtualMachine_b,\r\n    [\"Hypervisor\"] = HwHypervisorVendor_s,\r\n    [\"Hardware model\"] = HwModel_s,\r\n    [\"OS version #\"] = OsVersion_s,\r\n    [\"OS build #\"] = OsBuild_d,\r\n    [\"VDA version\"] = AgentVersion_s,\r\n    Tags\r\n",
+                "resources": [
+                  "$Workspace"
+                ],
+                "resultFormat": "logs",
+                "timeColumn": "TimeGenerated"
+              },
+              "datasource": {
+                "type": "grafana-azure-monitor-datasource",
+                "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+              },
+              "queryType": "Azure Log Analytics",
+              "refId": "A"
+            }
+          ],
+          "title": "Machine details: Machine catalog",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "inspect": false
+              },
+              "links": [
+                {
+                  "title": "",
+                  "url": "d/bdwuzhx8er85ce/machine-usage-single-machine-details?orgId=1&var-MachineName=${__data.fields.Name}&from=${__from}&to=${__to}﻿&var-Workspace=$Workspace"
+                }
+              ],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 24,
+            "x": 0,
+            "y": 31
+          },
+          "id": 11,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "11.1.4",
+          "targets": [
+            {
+              "azureLogAnalytics": {
+                "dashboardTime": false,
+                "query": "let groupBy = \"${MachineFilter}\";\r\nuberAgent_Citrix_Machines_CL \r\n| extend isRegistered = iff(CurrentRegistrationState_d == 1, 1, 0)\r\n| where isnotempty(NameHost_s) and DesktopGroupDisplayName_s == groupBy and isnotempty(SiteGuid_g)\r\n| join kind=inner uberAgent_System_MachineInventory_CL on Computer\r\n| summarize \r\n    arg_max(TimeGenerated, CatalogDisplayName_s),\r\n    arg_max(TimeGenerated, isRegistered),\r\n    arg_max(TimeGenerated, IsInMaintenanceMode_b),\r\n    arg_max(TimeGenerated, EffectiveLoadIndex_d),\r\n    arg_max(TimeGenerated, CurrentSessionCount_d),\r\n    arg_max(TimeGenerated, CPUCoresLogical_d),\r\n    arg_max(TimeGenerated, RAMSizeGB_d),\r\n    arg_max(TimeGenerated, HwIsVirtualMachine_b),\r\n    arg_max(TimeGenerated, HwHypervisorVendor_s),\r\n    arg_max(TimeGenerated, HwModel_s),\r\n    arg_max(TimeGenerated, OsVersion_s),\r\n    arg_max(TimeGenerated, OsBuild_d),\r\n    arg_max(TimeGenerated, AgentVersion_s),\r\n    TagsSplit = make_list(Tags_s)\r\n    by NameHost_s\r\n| extend Tags = strcat_array(TagsSplit, \", \")\r\n| project \r\n    Name = NameHost_s,\r\n    [\"Machine catalog\"] = CatalogDisplayName_s,\r\n    [\"Registered?\"] = isRegistered,\r\n    [\"Maint. mode?\"] = IsInMaintenanceMode_b,\r\n    [\"Load index\"] = EffectiveLoadIndex_d,\r\n    [\"#Sessions\"] = CurrentSessionCount_d,\r\n    [\"#CPU cores\"] = CPUCoresLogical_d,\r\n    [\"RAM (GB)\"] = RAMSizeGB_d,\r\n    [\"Is VM?\"] = HwIsVirtualMachine_b,\r\n    [\"Hypervisor\"] = HwHypervisorVendor_s,\r\n    [\"Hardware model\"] = HwModel_s,\r\n    [\"OS version #\"] = OsVersion_s,\r\n    [\"OS build #\"] = OsBuild_d,\r\n    [\"VDA version\"] = AgentVersion_s,\r\n    Tags",
+                "resources": [
+                  "$Workspace"
+                ],
+                "resultFormat": "logs"
+              },
+              "datasource": {
+                "type": "grafana-azure-monitor-datasource",
+                "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+              },
+              "queryType": "Azure Log Analytics",
+              "refId": "A"
+            }
+          ],
+          "title": "Machine details: Delivery group",
+          "type": "table"
+        }
+      ],
+      "title": "Machine Details",
+      "type": "row"
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": [
+    "Citrix-uberAgent"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "Subscription",
+        "options": [],
+        "query": {
+          "azureLogAnalytics": {
+            "query": "",
+            "resources": []
+          },
+          "queryType": "Azure Subscriptions",
+          "refId": "A"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "${DS_GRAFANA-AZURE-MONITOR-DATASOURCE}"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "Workspace",
+        "options": [],
+        "query": {
+          "azureLogAnalytics": {
+            "query": "",
+            "resources": []
+          },
+          "queryType": "Azure Workspaces",
+          "refId": "A",
+          "subscription": "$Subscription"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "Machine Catalog",
+          "value": "Machine Catalog"
+        },
+        "description": "",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Group by:",
+        "multi": false,
+        "name": "GroupBy",
+        "options": [
+          {
+            "selected": true,
+            "text": "Machine Catalog",
+            "value": "Machine Catalog"
+          },
+          {
+            "selected": false,
+            "text": "Delivery Group",
+            "value": "Delivery Group"
+          }
+        ],
+        "query": "Machine Catalog,Delivery Group",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "RdsDesktopAndAppCatalog",
+          "value": "RdsDesktopAndAppCatalog"
+        },
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "MachineFilter",
+        "options": [
+          {
+            "selected": true,
+            "text": "RdsDesktopAndAppCatalog",
+            "value": "RdsDesktopAndAppCatalog"
+          },
+          {
+            "selected": false,
+            "text": "VdiDesktopCatalog",
+            "value": "VdiDesktopCatalog"
+          },
+          {
+            "selected": false,
+            "text": "VdiDesktopGroup",
+            "value": "VdiDesktopGroup"
+          },
+          {
+            "selected": false,
+            "text": "RdsDesktopAndAppGroup",
+            "value": "RdsDesktopAndAppGroup"
+          }
+        ],
+        "query": "RdsDesktopAndAppCatalog, VdiDesktopCatalog, VdiDesktopGroup, RdsDesktopAndAppGroup",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Usage Visualization - Machines",
+  "uid": "fdw5kmcw751xcd",
+  "version": 108,
+  "weekStart": ""
+}

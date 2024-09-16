@@ -1,60 +1,72 @@
-## How to deploy the Azure Workbooks
-
-Currently, 2 types of workbook files are provided:
-* A workbook file, which only includes the workbook definition
-* An ARM template json file, which includes both the ARM template and the workbook definition
-
-### Deploy a workbook using Azure portal
-
-Users can deploy individual workbooks through the Azure portal, by following the steps:
-
-- In the Github repository, open the workbook file (.workbook) of interest and view it in "Raw" mode
-- Copy the file contents to the clipboard
-- In the Azure portal, navigate to the Azure Log Analytics Workspace which has been configured to store the collected uberAgent metrics
-- In the menu, navigate to "Monitoring" > "Workbooks"
-- Click "New"
-- Click the icon of "Advanced Editor"
-- If not already selected, select the "Gallery Template" tab
-
-- Paste the workbook contents (replace any existing text)
-- Click "Apply", "Done editing" and then the "Save" button
-- A prompt for populating some parameters will pop-up:
-   - Title: Set a unique workbook title
-   - Subscription
-   - Resource Group
-   - Location
-- Finally click "Apply" to save the parameter values and "Save" to store the workbook.
-
-The newly created workbook can be found under the Log Analytics Workspace > Workbooks list. It can also be found in the parent Resource Group.
+## Connecting Uber Agent Metrics to Azure Workbook
 
 
-### Deploy a workbook using ARM templates and Azure Powershell
+This document will walk you through the steps to connect "UberAgent" installed in your Citrix components to the Azure Workbook through Azure Log Monitor and visualize them in a dashboard. 
 
-Another option is to deploy the workbook using ARM templates and Azure Powershell (or other programming options provided by Azure).
+### Table of contents
+- [Connecting Uber Agent Metrics to Azure Workbook](#connecting-uber-agent-metrics-to-azure-workbook)
+  - [Table of contents](#table-of-contents)
+  - [Creating Azure Log Analytics workspace](#creating-azure-log-analytics-workspace)
+  - [Integrating uberAgent with Log Analytics workspace](#integrating-uberagent-with-log-analytics-workspace)
+  - [Import Azure workbook templates to your Azure Log Analytics Workspace](#import-azure-workbook-templates-to-your-azure-log-analytics-workspace)
+    - [Step 1 - Create a new "Log analytics workspace" in Azure or use an existing one](#step-1---create-a-new-log-analytics-workspace-in-azure-or-use-an-existing-one)
+    - [Step 2 - Use the powershell script to import the templates to your workspace](#step-2---use-the-powershell-script-to-import-the-templates-to-your-workspace)
 
-A prerequisite is the installation of [Azure Powershell](https://learn.microsoft.com/en-us/powershell/azure/install-azps-windows).
+### Creating Azure Log Analytics workspace
 
-The following commands can be executed in a Powershell environment:
+1. Log in to the Azure portal
+2. In all services, search for Log Analytics workspaces.
+![image](docImages/LogAnalyticsWorkspaceSearch.png) 
+3. Create a new workspace within the desired Subscription and Resource group
+
+### Integrating uberAgent with Log Analytics workspace
+
+1. Once uberAgent is installed in the required machine, go to the installed location. (By default would be : `C:\Program Files\vast limits\uberAgent`)
+2. Open the `uberAgent.conf` file and add the following Receiver entry in it. 
 
 ```
-# Log in Azure
-Login-AzureRmAccount;
-
-# Select the Subscription that will host the resources
-Select-AzureRmSubscription -SubscriptionID "<SUBSCRIPTIONID>";
-
-# Deploy the workbook
-New-AzureRmResourceGroupDeployment `
-    -ResourceGroupName "<RESOURCEGROUP>" `
-    -TemplateUri "https://github.com/citrix/uberagent-integrations/azure-monitor/azure-workbooks/WORKBOOK-ARM-TEMPLATE-NAME.json" `
-    -workbookDisplayName "WORKBOOK-DISPLAY-NAME" `
-    -workbookSourceId "LOGANALYTICS-RESOURCE-ID"
-
-# Example with the above placeholder values populated
-New-AzureRmResourceGroupDeployment `
-    -ResourceGroupName "azuremonitorrg" `
-    -TemplateUri "https://github.com/citrix/uberagent-integrations/azure-monitor/azure-workbooks/Session Usage ARM.json" `
-    -workbookDisplayName "Session Usage" `
-    -workbookSourceId "/subscriptions/1a2b3c4d-1a2b-1a2b-1a2b-1a2b3c4d5e6f/resourcegroups/azuremonitorrg/providers/microsoft.operationalinsights/workspaces/uberagentwspace"
+[Receiver]
+Name = Default
+Type = OMSLogAnalytics
+Protocol = HTTP				
+Servers = https://<log-analytics-workspace-id>.ods.opinsights.azure.com
+RESTToken = <log-analytics-primary key>
 ```
-The newly created workbook can be found under the Log Analytics Workspace > Workbooks list. It can also be found in the parent Resource Group.
+* Workspace ID and Primary Key can be found in : Settings →  Agents → Log Analytics agent instructions
+![image](docImages/AzureWSAgentPage.png) 
+
+3. Restart the uberAgent service, and it should start sending data to the Log Analytics workspace.
+4. Verify if the data is received in Logs → Custom Logs to see the tables created
+![image](docImages/AzureWSTables.png) 
+   
+
+
+
+### Import Azure workbook templates to your Azure Log Analytics Workspace
+
+#### Step 1 - Create a new "Log analytics workspace" in Azure or use an existing one
+
+
+* Navigate to the azure portal
+* Search for "Log analytics workspace" and go to the dedicated page
+* Click on the workspace to which you are sending the data (Configured in previous section)
+* Note down the "Resource Group", "Workspace Name" and "Subscription ID"
+* Make sure your account has the necessary permissions to create a new workspace to CLI
+  
+
+ ![image](docImages/AzureMonitorInfoPage.png)
+
+
+
+
+
+#### Step 2 - Use the powershell script to import the templates to your workspace
+
+* Open "Powershell"
+* Make sure you have the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/) installed in your machine
+* Login to your account by running `az login`
+* Navigate to the AzureWorkbook folder
+* run the powershell script by running `.\ImportWorkbooks.ps1`
+* It will ask for "Subscription Id", "Resource Group Name" and "Workspace Name"
+* You can copy the values from Azure Portal and paste them in the CLI by mouse right click
+* The script will import the templates to your Azure Workbooks
