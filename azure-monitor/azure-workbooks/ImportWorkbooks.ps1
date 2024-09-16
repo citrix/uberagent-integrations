@@ -72,10 +72,10 @@ $resourceGroup = Read-Host "Enter the resourceGroup name"
 Set-AzContext $subscriptionId
 
 #If you need more files to be imported, change here
-$originalFileNames = @("appsUsage.json", "machinesUsage.json", "sessionsUsage.json", "singleMachineDetails.json", "singleSessionDetails.json")
+$originalFileNames = @("citrix_application_usage.json", "citrix_machines.json", "citrix_session_configuration_details.json", "citrix_single_machine_detail.json", "citrix_session_single_user_detail.json")
 
 #If you need more files to be replaced, change here. Please make sure the order is same in file names and ids
-$replacementNeededFileNames = @( 'machinesUsage.json', 'sessionsUsage.json')
+$replacementNeededFileNames = @( 'citrix_machines.json', 'citrix_session_configuration_details.json')
 $replacementNeededIds = @("a2b60e6a-a702-4703-92ff-3a0bbed5a028", "ab17cd9b-b615-4dff-9215-570bcae0c031")
 
 $newPrefix = "temp_"
