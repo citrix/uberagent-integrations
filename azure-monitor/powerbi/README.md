@@ -15,11 +15,11 @@ The reports reference datasets which are generated from Kusto queries to the Log
 
 ### Creating Azure Log Analytics workspace
 
-[Creating Azure Log Analytics workspace](/README.md#creating-azure-log-analytics-workspace)
+[Creating Azure Log Analytics workspace](../README.md#creating-azure-log-analytics-workspace)
 
 ### Integrating uberAgent with Log Analytics workspace
 
-[Integrating uberAgent with Log Analytics workspace](/README.md#integrating-uberagent-with-log-analytics-workspace)
+[Integrating uberAgent with Log Analytics workspace](../README.md#integrating-uberagent-with-log-analytics-workspace)
 
 ### Loading the template
 
