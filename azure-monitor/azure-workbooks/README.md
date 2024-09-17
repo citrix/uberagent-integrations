@@ -8,11 +8,11 @@ This document will walk you through the steps to connect "UberAgent" installed i
   - [Integrating uberAgent with Log Analytics workspace](#integrating-uberagent-with-log-analytics-workspace)
   - [Import Azure workbook templates to your Azure Log Analytics Workspace](#import-azure-workbook-templates-to-your-azure-log-analytics-workspace)
     - [Step 1 - Create a new "Log analytics workspace" in Azure or use an existing one](#step-1---create-a-new-log-analytics-workspace-in-azure-or-use-an-existing-one)
-    - [Step 2 - Use the workbook files or the powershell script to import the templates to your workspace](#step-2---use-the-workbook-files-or-the-powershell-script-to-import-the-templates-to-your-workspace)
-    - [Option 1 : Use the workbook files in the repo and manually add them to your workspace](#option-1--use-the-workbook-files-in-the-repo-and-manually-add-them-to-your-workspace)
+    - [Step 2 - Use powershell script or workbook files import the templates to your workspace](#step-2---use-powershell-script-or-workbook-files-import-the-templates-to-your-workspace)
+    - [Option 1 : Use powershell](#option-1--use-powershell)
+    - [Option 2 : Use the workbook files in the repo and manually add them to your workspace](#option-2--use-the-workbook-files-in-the-repo-and-manually-add-them-to-your-workspace)
       - [Importing workspace files](#importing-workspace-files)
       - [Linking the workspaces](#linking-the-workspaces)
-    - [Option 2 : Use powershell](#option-2--use-powershell)
 
 
 ### Creating Azure Log Analytics workspace
@@ -39,12 +39,25 @@ This document will walk you through the steps to connect "UberAgent" installed i
  ![image](docImages/AzureMonitorInfoPage.png)
 
 
-#### Step 2 - Use the workbook files or the powershell script to import the templates to your workspace
+#### Step 2 - Use powershell script or workbook files import the templates to your workspace
 
-You can either manually add the individual workbooks or use the [powershell script](https://github.com/citrix/uberagent-integrations/blob/main/azure-monitor/azure-workbooks/ImportWorkbooks.ps1) in the repo to import the workbooks.
+You can either use the [powershell script](https://github.com/citrix/uberagent-integrations/blob/main/azure-monitor/azure-workbooks/ImportWorkbooks.ps1) in the repo or manually add the individual workbooks to import the workbooks.
 
 
-#### Option 1 : Use the workbook files in the repo and manually add them to your workspace
+#### Option 1 : Use powershell
+
+* Download the [powershell script](https://github.com/citrix/uberagent-integrations/blob/main/azure-monitor/azure-workbooks/ImportWorkbooks.ps1) from the repo
+* Open "Powershell"
+* Navigate to the folder to which you have downloaded the ps1 file
+* Make sure you have the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/) installed in your machine
+* Login to your account by running `az login`
+* Navigate to the AzureWorkbook folder
+* run the powershell script by running `.\ImportWorkbooks.ps1`
+* It will ask for "Subscription Id", "Resource Group Name" and "Workspace Name"
+* You can copy the values from Azure Portal and paste them in the CLI by mouse right click
+* The script will import the templates to your Azure Workbooks
+
+#### Option 2 : Use the workbook files in the repo and manually add them to your workspace
 
 ##### Importing workspace files
 
@@ -68,7 +81,7 @@ You can either manually add the individual workbooks or use the [powershell scri
 The newly created workbook can be found under the Log Analytics Workspace > Workbooks list. It can also be found in the parent Resource Group.
 
 ##### Linking the workspaces
-The citrix_session_configuration_details and citrix_machine can be linked to citrix_session_single_user_details and citrix_single_machine_details workbooks respectively to have a seamless drill-down view. Follow these steps
+The `citrix_session_configuration_details` and `citrix_machine` can be linked to `citrix_session_single_user_details` and `citrix_single_machine_details` workbooks respectively to have a seamless drill-down view. Follow these steps
 
 * in the "Workbooks" home page, in the tile corresponding to "citrix_single_machine_details", click on the 3 dots and select "View Resource"
 * Copy the resource id
@@ -82,15 +95,4 @@ The citrix_session_configuration_details and citrix_machine can be linked to cit
 * Repeat the same for citrix_single_machine_details by copying the resource id and pasting that resource id in the gallery template of citrix_machine workbook
 
 
-#### Option 2 : Use powershell
 
-* Download the [powershell script](https://github.com/citrix/uberagent-integrations/blob/main/azure-monitor/azure-workbooks/ImportWorkbooks.ps1) from the repo
-* Open "Powershell"
-* Navigate to the folder to which you have downloaded the ps1 file
-* Make sure you have the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/) installed in your machine
-* Login to your account by running `az login`
-* Navigate to the AzureWorkbook folder
-* run the powershell script by running `.\ImportWorkbooks.ps1`
-* It will ask for "Subscription Id", "Resource Group Name" and "Workspace Name"
-* You can copy the values from Azure Portal and paste them in the CLI by mouse right click
-* The script will import the templates to your Azure Workbooks
