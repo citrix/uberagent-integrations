@@ -4,12 +4,32 @@ For PowerBI, a template file (.pbit) is provided.
 The file includes a set of pre-built reports based on the collected uberAgent metrics.
 The reports reference datasets which are generated from Kusto queries to the Log Analytics workspace which is configured to collect uberAgent metrics.
 
+### Table of contents
+  - [Creating Azure Log Analytics workspace](#creating-azure-log-analytics-workspace)
+  - [Integrating uberAgent with Log Analytics workspace](#integrating-uberagent-with-log-analytics-workspace)
+  - [Loading the template](#loading-the-template)
+    - [Troubleshooting](#troubleshooting)
+  - [Publishing the template](#publishing-the-template)
+  - [Dashboard preview](#dashboard-preview)
+  - [Configured scheduled refresh](#configured-scheduled-refresh)
+
+### Creating Azure Log Analytics workspace
+
+[Creating Azure Log Analytics workspace](/README.md#creating-azure-log-analytics-workspace)
+
+### Integrating uberAgent with Log Analytics workspace
+
+[Integrating uberAgent with Log Analytics workspace](/README.md#integrating-uberagent-with-log-analytics-workspace)
+
 ### Loading the template
 
 - Open PowerBI desktop.  
   Note that the template was created with PowerBI version 2.132.1053.0 64-bit (August, 2024). You may need to upgrade to successfully open the template file.
 - Navigate to "File" > "Import" > "Power BI Template" and select the .pbit file downloaded from the Github repository.
-- Upon the importing, you will be prompted to provide the Log Analytics connection string, captured as a parameter named "LAConnection". The value should look like `https://api.loganalytics.io/v1/workspaces/workspace-id/query`.
+- Upon the importing, you will be prompted to provide the Log Analytics connection string, captured as a parameter named "LAConnection".
+  ![image](docImages/LAconnection.png) 
+- The value should look like `https://api.loganalytics.io/v1/workspaces/workspace-id/query`.
+  ![image](docImages/LogAnalyticsWorkspaceID.png)
 - When prompted, authenticate as needed to access the Web Content and click "Connect".
 - A series of datasets will be refreshed, which may take some time, depending on the size of the uberAgent datasets.
 
@@ -22,10 +42,15 @@ The reports reference datasets which are generated from Kusto queries to the Log
 
 You can review the report set included in the template and optionally make enhancements. Once done, you can publish the reports to your PowerBI workspace:
 - Click the "Publish" button which is part of the "Home" menu.
+    ![image](docImages/PublishPowerBI.png)
 - Save the project as a .pbix file.
 - Select the workspace to publish to.
 
 Reference: https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-upload-desktop-files
+
+### Dashboard preview
+
+![image](docImages/DashboardPreview.png)
 
 ### Configured scheduled refresh
 
