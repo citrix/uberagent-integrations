@@ -4,8 +4,6 @@
 This document will walk you through the steps to connect "UberAgent" installed in your Citrix components to the Azure Workbook through Azure Log Monitor and visualize them in a dashboard. 
 
 ### Table of contents
-- [Connecting Uber Agent Metrics to Azure Workbook](#connecting-uber-agent-metrics-to-azure-workbook)
-  - [Table of contents](#table-of-contents)
   - [Creating Azure Log Analytics workspace](#creating-azure-log-analytics-workspace)
   - [Integrating uberAgent with Log Analytics workspace](#integrating-uberagent-with-log-analytics-workspace)
   - [Import Azure workbook templates to your Azure Log Analytics Workspace](#import-azure-workbook-templates-to-your-azure-log-analytics-workspace)
@@ -14,33 +12,12 @@ This document will walk you through the steps to connect "UberAgent" installed i
 
 ### Creating Azure Log Analytics workspace
 
-1. Log in to the Azure portal
-2. In all services, search for Log Analytics workspaces.
-![image](docImages/LogAnalyticsWorkspaceSearch.png) 
-3. Create a new workspace within the desired Subscription and Resource group
+[Creating Azure Log Analytics workspace](/README.md#creating-azure-log-analytics-workspace)
 
 ### Integrating uberAgent with Log Analytics workspace
 
-1. Once uberAgent is installed in the required machine, go to the installed location. (By default would be : `C:\Program Files\vast limits\uberAgent`)
-2. Open the `uberAgent.conf` file and add the following Receiver entry in it. 
-
-```
-[Receiver]
-Name = Default
-Type = OMSLogAnalytics
-Protocol = HTTP				
-Servers = https://<log-analytics-workspace-id>.ods.opinsights.azure.com
-RESTToken = <log-analytics-primary key>
-```
-* Workspace ID and Primary Key can be found in : Settings →  Agents → Log Analytics agent instructions
-![image](docImages/AzureWSAgentPage.png) 
-
-3. Restart the uberAgent service, and it should start sending data to the Log Analytics workspace.
-4. Verify if the data is received in Logs → Custom Logs to see the tables created
-![image](docImages/AzureWSTables.png) 
+[Integrating uberAgent with Log Analytics workspace](/README.md#integrating-uberagent-with-log-analytics-workspace)
    
-
-
 
 ### Import Azure workbook templates to your Azure Log Analytics Workspace
 
