@@ -12,11 +12,11 @@
 
 ### Creating Azure Log Analytics workspace
 
-[Creating Azure Log Analytics workspace](/README.md#creating-azure-log-analytics-workspace)
+[Creating Azure Log Analytics workspace](../README.md#creating-azure-log-analytics-workspace)
 
 ### Integrating uberAgent with Log Analytics workspace
 
-[Integrating uberAgent with Log Analytics workspace](/README.md#integrating-uberagent-with-log-analytics-workspace)
+[Integrating uberAgent with Log Analytics workspace](../README.md#integrating-uberagent-with-log-analytics-workspace)
 
 ### Configuring Grafana with Log Analytics workspace
 
