@@ -130,12 +130,13 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "dashboardTime": false,
+            "dashboardTime": true,
             "query": "let MachineName = '${MachineName}';\r\nlet SystemPerformance = \r\n    uberAgent_System_SystemPerformanceSummary2_CL\r\n    | where Computer == MachineName\r\n    | summarize \r\n        AvgCPURelativeFrequencyPercent = avg(CPURelativeFrequencyPercent_d)\r\n        by Computer;\r\nlet MachineInventory = \r\n    uberAgent_System_MachineInventory_CL \r\n    | where Computer == MachineName\r\n    | sort by TimeGenerated desc\r\n    | take 1\r\n    | project\r\n        Computer, \r\n        LatestCPUCoresLogical = CPUCoresLogical_d,\r\n        HwManufacturer = HwManufacturer_s,\r\n        HwModel = HwModel_s,\r\n        LatestCPUMaxMhz = CPUMaxMhz_d,\r\n        LatestRAMSizeGB = RAMSizeGB_d;\r\nMachineInventory\r\n| join kind=inner (SystemPerformance) on Computer\r\n| extend \r\n    CPUBaseGHz = round(LatestCPUMaxMhz / 1000.0, 2),\r\n    CPUActualGHz = round(LatestCPUMaxMhz / 1000.0 * AvgCPURelativeFrequencyPercent / 100.0, 2)\r\n| project \r\n    Computer,\r\n    HwManufacturer,\r\n    HwModel,\r\n    CPUActualGHz,\r\n    CPUBaseGHz,\r\n    LatestCPUCoresLogical,\r\n    LatestRAMSizeGB",
             "resources": [
               "$Workspace"
             ],
-            "resultFormat": "logs"
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
@@ -204,12 +205,13 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "dashboardTime": false,
+            "dashboardTime": true,
             "query": "let MachineName = '${MachineName}';\r\nlet userDetails = \r\n    uberAgent_Session_SessionDetail_CL\r\n    | where Computer == MachineName and SessionUser_s != \"sys\"\r\n    | summarize SessionCount = dcount(SessionGUID_g),\r\n                ForgegroundAppCount = dcount(SessionFgAppId_s),\r\n                UserCount = dcount(SessionUser_s)\r\n      by Computer;\r\nlet logonDetails = uberAgent_Logon_LogonDetail_CL\r\n    | where Computer == MachineName\r\n    | summarize LogonCount = dcount(SessionGUID_g) by Computer;\r\nlet applicationErrors = uberAgent_Application_Errors_CL\r\n    | where Computer == MachineName\r\n    | summarize ErrorCount = count() by Computer;\r\nuserDetails\r\n| join kind=inner (logonDetails) on Computer\r\n| join kind=inner (applicationErrors) on Computer\r\n| project Computer, SessionCount, UserCount, LogonCount, ForgegroundAppCount, ErrorCount",
             "resources": [
               "$Workspace"
             ],
-            "resultFormat": "logs"
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
@@ -278,12 +280,13 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "dashboardTime": false,
+            "dashboardTime": true,
             "query": "let MachineName = '${MachineName}';\r\nlet systemPerformance = \r\n    uberAgent_System_SystemPerformanceSummary2_CL\r\n    | where Computer == MachineName\r\n    | summarize \r\n        AvgCPUUsagePercent = avg(CPUUsagePercent_d),\r\n        AvgIOPercentDiskTime = avg(IOPercentDiskTime_d),\r\n        AvgRAMUsagePercent = avg(RAMUsagePercent_d),\r\n        AvgNetUtilizationPercent = avg(NetUtilizationPercent_d),\r\n        AvgPagefileUsagePercent = avg(PagefileUsagePercent_d)\r\n        by Computer\r\n    | extend \r\n        AvgCPUUsagePercentRounded = round(AvgCPUUsagePercent, 1),\r\n        AvgIOPercentDiskTimeRounded = round(AvgIOPercentDiskTime, 2),\r\n        AvgRAMUsagePercentRounded = round(AvgRAMUsagePercent, 1),\r\n        AvgNetUtilizationPercentRounded = round(AvgNetUtilizationPercent, 1),\r\n        AvgPagefileUsagePercentRounded = round(AvgPagefileUsagePercent, 1)\r\n    | project Computer, AvgCPUUsagePercentRounded, AvgIOPercentDiskTimeRounded, AvgRAMUsagePercentRounded, AvgNetUtilizationPercentRounded, AvgPagefileUsagePercentRounded;\r\nlet uiDelay = \r\n    uberAgent_Application_UIDelay_CL\r\n    | where Computer == MachineName\r\n    | summarize SumUIDelayMs = sum(UIDelayMs_d) by Computer\r\n    | extend SumUIDelayS = round(SumUIDelayMs / 1000, 1)\r\n    | project Computer, SumUIDelayS;\r\nlet logonDetails = uberAgent_Logon_LogonDetail_CL\r\n| where Computer == MachineName\r\n| summarize \r\n    LogonCount = dcount(SessionGUID_g),\r\n    AvgTotalLogonTimeMs = avg(TotalLogonTimeMs_d)\r\n    by Computer\r\n| extend AvgTotalLogonTimeSRounded = iff(isnull(AvgTotalLogonTimeMs), \"n/a\", tostring(round(AvgTotalLogonTimeMs / 1000.0, 2)))\r\n| project Computer, AvgTotalLogonTimeSRounded;\r\nsystemPerformance\r\n| join kind=inner (uiDelay) on Computer\r\n| join kind=inner (logonDetails) on Computer\r\n| project Computer, AvgCPUUsagePercentRounded, AvgRAMUsagePercentRounded, AvgIOPercentDiskTimeRounded, AvgNetUtilizationPercentRounded, SumUIDelayS, AvgTotalLogonTimeSRounded, AvgPagefileUsagePercentRounded;",
             "resources": [
               "$Workspace"
             ],
-            "resultFormat": "logs"
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
@@ -526,12 +529,13 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "dashboardTime": false,
+            "dashboardTime": true,
             "query": "let MachineName = '${MachineName}';\r\nlet Process_NetworkTargetPerformance = \r\n    uberAgent_Process_NetworkTargetPerformance_CL \r\n    | where Computer in (MachineName)\r\n    | summarize\r\n        AvgNetTargetSendLatencyMs_d = avg(NetTargetSendLatencyMs_d),\r\n        SumNetTargetSendMB = sum(NetTargetSendMB_d),\r\n        SumNetTargetReceiveMB = sum(NetTargetReceiveMB_d)\r\n    by bin(TimeGenerated, 24h);\r\n\r\nProcess_NetworkTargetPerformance\r\n| extend \r\n    AvgSendLatencyMs = round(AvgNetTargetSendLatencyMs_d, 1)\r\n| project \r\n    TimeGenerated,\r\n    [\"Avg. send latency (ms)\"] = AvgSendLatencyMs, \r\n    [\"Send volume (MB)\"] = SumNetTargetSendMB,\r\n    [\"Receive volume (MB)\"] = SumNetTargetReceiveMB\r\n| sort by TimeGenerated asc \r\n",
             "resources": [
               "$Workspace"
             ],
-            "resultFormat": "logs"
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
@@ -672,12 +676,13 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "dashboardTime": false,
+            "dashboardTime": true,
             "query": "let MachineName = '${MachineName}';\r\nlet System_SystemPerformanceSummary = \r\n    uberAgent_System_SystemPerformanceSummary2_CL\r\n    | where Computer in (MachineName)\r\n    | summarize\r\n        EventCount = count(),\r\n        SumRAMUsageGB = sum(RAMUsageGB_d),\r\n        SumCPUUsagePercent = sum(CPUUsagePercent_d)\r\n    by bin(TimeGenerated, 24h);\r\n\r\nSystem_SystemPerformanceSummary\r\n| extend \r\n    AvgRAMGB = round(SumRAMUsageGB / EventCount, 1),\r\n    AvgCPUPercent = round(SumCPUUsagePercent / EventCount, 1)\r\n| project \r\n    TimeGenerated,\r\n    [\"Avg. CPU (%)\"] = AvgCPUPercent, \r\n    [\"Avg. RAM (GB)\"] = AvgRAMGB\r\n| render columnchart\r\n| sort by TimeGenerated asc \r\n",
             "resources": [
               "$Workspace"
             ],
-            "resultFormat": "logs"
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
@@ -972,12 +977,13 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "dashboardTime": false,
+            "dashboardTime": true,
             "query": "let MachineName = '${MachineName}';\r\nlet VolumeInventory = \r\nuberAgent_System_VolumeInventory_CL\r\n    | where Computer in (MachineName) and isnotempty(MountPoints_s)\r\n    | summarize \r\n        IsBootVolume = any(IsBootVolume_b),\r\n        IsDirty = any(IsDirty_b),\r\n        FileSystem = any(FileSystem_s),\r\n        LatestUsedSpacePercent = max(UsedSpacePercent_d),\r\n        LatestFreeMB = max(FreeMB_d),\r\n        CapacityMB = any(CapacityMB_d),\r\n        PartitionStyle = any(PartitionStyle_s)\r\n    by Computer, MountPoints_s, DiskNumbers_s;\r\n\r\nlet VolumeCalculations = \r\n    VolumeInventory\r\n    | extend \r\n        FreeSpaceGB = round(LatestFreeMB / 1024, 1),\r\n        FreeSpacePercent = round(100 - LatestUsedSpacePercent, 1),\r\n        UsedSpaceGB = round(CapacityMB * LatestUsedSpacePercent / 100 / 1024, 1)\r\n    | project \r\n        Computer,\r\n        Path = MountPoints_s,\r\n        FreeSpaceGB,\r\n        UsedSpaceGB,\r\n        FreeSpacePercent,\r\n        FileSystem,\r\n        PartitionStyle,\r\n        IsBootVolume,\r\n        IsDirty,\r\n        DiskNumber = toint(DiskNumbers_s);\r\n\r\n\r\nlet DiskInventory = \r\n    uberAgent_System_DiskInventory_CL\r\n    | where Computer in (MachineName)\r\n    | summarize \r\n        DeviceName = any(Name_s),\r\n        IsRemovable = any(IsRemovable_b),\r\n        IsWritable = any(IsWritable_b)\r\n    by Computer, DiskNumber_d\r\n    | extend DiskNumber = toint(DiskNumber_d)\r\n    | project \r\n        Computer, \r\n        DiskNumber, \r\n        DeviceName, \r\n        IsRemovable, \r\n        IsWritable;\r\n\r\n\r\nVolumeCalculations\r\n| join kind=leftouter  (\r\n    DiskInventory\r\n    | project \r\n        Computer,\r\n        DiskNumber,\r\n        DeviceName,\r\n        IsRemovable,\r\n        IsWritable\r\n) on Computer, DiskNumber\r\n| project \r\n    Host= Computer,\r\n    Path,\r\n    FreeSpaceGB,\r\n    UsedSpaceGB,\r\n    FreeSpacePercent,\r\n    DeviceName,\r\n    FileSystem,\r\n    PartitionStyle,\r\n    IsBootVolume,\r\n    Chkdsk_req = IsDirty,\r\n    IsRemovable,\r\n    IsWritable\r\n| order by Host, Path\r\n\r\n",
             "resources": [
               "$Workspace"
             ],
-            "resultFormat": "logs"
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
@@ -1083,13 +1089,13 @@
     ]
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Machine Usage - Single Machine Detail",
   "uid": "bdwuzhx8er85ce",
-  "version": 63,
+  "version": 70,
   "weekStart": ""
 }
