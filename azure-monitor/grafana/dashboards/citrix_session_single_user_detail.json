@@ -130,12 +130,13 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "dashboardTime": false,
+            "dashboardTime": true,
             "query": "uberAgent_Session_SessionDetail_CL\r\n| where SessionUser_s == '${query0}'\r\n| summarize \r\n    SessionUser = tostring(make_set(SessionUser_s, 10)),\r\n    SessionProtocols = tostring(make_set(SessionProtocol_s, 10)),\r\n    SessionCount = dcount(SessionGUID_g),\r\n    SessionFgAppCount = dcount(SessionFgAppId_s),\r\n    HostCount =dcount(SessionFgBrowserActiveTabHost_s),\r\n    AvgSessionCPUUsagePercent = round(avg(SessionCPUUsagePercent_d),1),\r\n    AvgSessionIOPS = round(avg(SessionIOPS_d),1),\r\n    AvgSessionWorkingSetMB = round(avg(SessionWorkingSetMB_d))\r\n| union (\r\n    uberAgent_Application_UIDelay_CL\r\n    | where User_s ==  '${query0}'\r\n    | summarize \r\n        SumUIDelayMs = sum(UIDelayMs_d)\r\n    | project SumUIDelayS = round(SumUIDelayMs/1000)\r\n)\r\n| union (\r\n    uberAgent_Logon_LogonDetail_CL\r\n    | where User_s ==  '${query0}'\r\n    | summarize \r\n        LogonCount = dcount(SessionGUID_g),\r\n        AvgTotalLogonTimeMs = avg(TotalLogonTimeMs_d)\r\n    | project AvgTotalLogonTimeSRounded = iif(isnull(AvgTotalLogonTimeMs) or isnan(AvgTotalLogonTimeMs), \"n/a\", tostring(round(AvgTotalLogonTimeMs / 1000, 2)))\r\n)\r\n| union (\r\n    uberAgent_Application_Errors_CL\r\n    | where ProcUser_s ==  '${query0}'\r\n    | summarize \r\n        ErrorCount = count()\r\n)\r\n|summarize \r\n    User = '${query0}',\r\n    [\"#Sessions\"] = take_any(SessionCount),\r\n    [\"#Apps in foreground\"] = take_any(SessionFgAppCount),\r\n    [\"#Hosts\"] = take_any(HostCount),\r\n    [\"Avg. CPU (%)\"] = take_any(AvgSessionCPUUsagePercent),\r\n    [\"Avg. disk IOPS\"] = take_any(AvgSessionIOPS),\r\n    [\"Avg. RAM (MB)\"] = take_any(AvgSessionWorkingSetMB),\r\n    [\"Total UI wait time (s)\"] = take_any(SumUIDelayS),\r\n    [\"Avg. logon duration (s)\"] = take_any(AvgTotalLogonTimeSRounded),\r\n    [\"App errors\"] = take_any(ErrorCount)",
             "resources": [
               "$Workspace"
             ],
-            "resultFormat": "logs"
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
@@ -362,12 +363,13 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "dashboardTime": false,
+            "dashboardTime": true,
             "query": "uberAgent_Session_SessionDetail_CL\r\n| where SessionUser_s == '${query0}'\r\n| join kind=leftouter uberAgent_Logon_LogonDetail_CL on SessionGUID_g\r\n| summarize \r\n    arg_max(TimeGenerated,Computer),\r\n    arg_max(TimeGenerated,SessionGUID_g),\r\n    arg_max(TimeGenerated,SessionID_d),\r\n    arg_max(TimeGenerated,SessionProtocol_s),\r\n    arg_max(TimeGenerated,SessionConnectionState_s),\r\n    make_set(SessionClientName_s,10),\r\n    arg_max(TimeGenerated,TimeGenerated),\r\n    arg_max(TimeGenerated, SessionLogonTime_s),\r\n    AvgSessionProcessCount = avg(SessionProcessCount_d),\r\n    AvgSessionCPUUsagePercent = avg(SessionCPUUsagePercent_d),\r\n    AvgSessionIOPS = avg(SessionIOPS_d),\r\n    AvgSessionWorkingSetMB = avg(SessionWorkingSetMB_d),\r\n    AvgSessionNetKBPS = avg(SessionNetKBPS_d),\r\n    AvgSessionRpLatencyMs = avg(SessionRpLatencyMs2_d),\r\n    AvgSessionRoundTripTimeMs = avg(SessionRoundTripTimeMs_d),\r\n    SumSessionIOCount = sum(SessionIOCount_d),\r\n    TotalLogonTimeMs = sum(TotalLogonTimeMs_d)\r\nby SessionGUID_g\r\n|project \r\nSessionGUID = SessionGUID_g,\r\nHost = Computer,\r\nID = SessionID_d,\r\n[\"Logon time\"] = SessionLogonTime_s,\r\n[\"Logon duration (s)\"] = round(TotalLogonTimeMs/1000,2),\r\n[\"Last seen\"] = TimeGenerated,\r\n[\"Last state\"] = SessionConnectionState_s,\r\n[\"Protocol\"] = SessionProtocol_s,\r\n[\"Avg. #processes\"] = round(AvgSessionProcessCount),\r\n[\"Avg. CPU (%)\"] =round( AvgSessionCPUUsagePercent,1),\r\n[\"Avg. IOPS\"] = round(AvgSessionIOPS,1),\r\n[\"Avg. IO latency (ms)\"] = iff(isnan(round(AvgSessionRpLatencyMs/SumSessionIOCount,1)),'n/a',tostring(round(AvgSessionRpLatencyMs/SumSessionIOCount,1))),\r\n[\"Avg. RAM (MB)\"] = round(AvgSessionWorkingSetMB),\r\n[\"Avg. network (KB/s)\"] = round(AvgSessionNetKBPS,1),\r\n[\"Avg. ICA latency (ms)\"] = iff(isnan(AvgSessionRoundTripTimeMs),'n/a',tostring(round(AvgSessionRoundTripTimeMs,1))),\r\n[\"Remoting clients\"] = set_SessionClientName_s\r\n| sort by ['Logon time'] desc ",
             "resources": [
               "$Workspace"
             ],
-            "resultFormat": "logs"
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
@@ -437,12 +439,13 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "dashboardTime": false,
+            "dashboardTime": true,
             "query": "\r\nuberAgent_CitrixSession_SessionConfig_CL\r\n|where SessionUser_s == '${query0}'\r\n| join kind=leftouter uberAgent_Session_SessionDetail_CL on SessionGUID_g\r\n| summarize \r\n    arg_max(TimeGenerated,CdmVolumes_s),\r\n    arg_max(TimeGenerated,DisplayMode_d),\r\n    arg_max(TimeGenerated,ThinwireColorDepth_d),\r\n    arg_max(TimeGenerated,ThinwireComponentEncoder_s),\r\n    arg_max(TimeGenerated,ThinwireHardwareEncodeInUse_b),\r\n    arg_max(TimeGenerated,ThinwireVideoCodecType_s),\r\n    arg_max(TimeGenerated,ThinwireColorspace_s),\r\n    arg_max(TimeGenerated,ThinwireVideoCodecUse_s),\r\n    arg_max(TimeGenerated,NetworkEdtMtu_d),\r\n    arg_max(TimeGenerated,NetworkConnectedVia_s),\r\n    arg_max(TimeGenerated,PrinterSessionPrinter_s),\r\n    arg_max(TimeGenerated,AudioActualPriority_s),\r\n    arg_max(TimeGenerated,CdmActualPriority_s),\r\n    arg_max(TimeGenerated,PrinterActualPriority_s),\r\n    arg_max(TimeGenerated,USBActualPriority_s),\r\n    arg_max(TimeGenerated,ThinwireActualPriority_s),\r\n    arg_max(TimeGenerated,SessionUser_s),\r\n    arg_max(TimeGenerated,Computer),\r\n    arg_max(TimeGenerated,SessionTransportProtocols_s)\r\nby SessionUser_s\r\n| project \r\n[\"Mapped volumes\"] = replace_string(CdmVolumes_s, \";\",\" , \"),\r\n[\"Display mode\" ] = DisplayMode_d,\r\n[\"Thinwire color depth (bit)\"] = ThinwireColorDepth_d,\r\n[\"Thinwire component encoder\"] = ThinwireComponentEncoder_s,\r\n[\"Thinwire hardware encode\"] = ThinwireHardwareEncodeInUse_b,\r\n[\"Thinwire video codec type\"] = ThinwireVideoCodecType_s,\r\n[\"Thinwire color space\"] = ThinwireColorspace_s,\r\n[\"Thinwire video codec usage\"] = ThinwireVideoCodecUse_s,\r\n[\"EDT MTU\"] = NetworkEdtMtu_d,\r\n[\"Connected via\"] = NetworkConnectedVia_s,\r\n[\"Mapped printers\"] = replace_string(PrinterSessionPrinter_s, \";\",\" , \"),\r\n[\"Audio channel actual priority\"] = AudioActualPriority_s,\r\n[\"CDM channel actual priority\"] = CdmActualPriority_s,\r\n[\"Printer channel actual priority\"] = PrinterActualPriority_s,\r\n[\"USB channel actual priority\"] = USBActualPriority_s,\r\n[\"Thinwire channel actual priority\"] = ThinwireActualPriority_s,\r\n[\"Transport protocols\"] = SessionTransportProtocols_s,\r\nUser = SessionUser_s,\r\nHost = Computer\r\n| evaluate narrow()\r\n| project Setting = Column, [\"${query0}\"] = Value\r\n| sort by Setting asc\r\n",
             "resources": [
               "$Workspace"
             ],
-            "resultFormat": "logs"
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
@@ -512,12 +515,13 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "dashboardTime": false,
+            "dashboardTime": true,
             "query": "uberAgent_CitrixSession_SessionConfig_CL\r\n|where SessionUser_s == '${query0}'\r\n| join kind=leftouter uberAgent_Session_SessionDetail_CL on SessionGUID_g\r\n| summarize \r\narg_max(TimeGenerated,AudioPolicyAllowMicrophoneRedirection_b),\r\narg_max(TimeGenerated,AudioPolicyAllowRedirection_b),\r\narg_max(TimeGenerated,AudioPolicyPriority_s),\r\narg_max(TimeGenerated,AudioPolicySoundQuality_s),\r\narg_max(TimeGenerated,CdmPolicyAllowDriveRedirection_b),\r\narg_max(TimeGenerated,CdmPolicyReadOnly_b),\r\narg_max(TimeGenerated,CdmPolicyPriority_s),\r\narg_max(TimeGenerated,ThinwirePolicyFps_d),\r\narg_max(TimeGenerated,ThinwirePolicyPriority_s),\r\narg_max(TimeGenerated,ThinwirePolicyUseHardwareEncoding_b),\r\narg_max(TimeGenerated,ThinwirePolicyUseVideoCodec_s),\r\narg_max(TimeGenerated,ThinwirePolicyVisualQuality_s),\r\narg_max(TimeGenerated,NetworkPolicyAcceptSessionReliabilityConnections_b),\r\narg_max(TimeGenerated,NetworkPolicySessionReliabilityPort_d),\r\narg_max(TimeGenerated,NetworkPolicySessionReliabilityTimeout_d),\r\narg_max(TimeGenerated,NetworkPolicyICAListenerPortNumber_d),\r\narg_max(TimeGenerated,PrinterPolicyAllowRedirection_b),\r\narg_max(TimeGenerated,PrinterPolicyAutoCreateClientPrinters_d),\r\narg_max(TimeGenerated,PrinterPolicyPriority_s),\r\narg_max(TimeGenerated,USBPolicyAllowPNPRedirection_b),\r\narg_max(TimeGenerated,USBPolicyAllowUSBSupport_b),\r\narg_max(TimeGenerated,USBPolicyPriority_s),\r\narg_max(TimeGenerated,SessionUser_s),\r\narg_max(TimeGenerated,Computer),\r\narg_max(TimeGenerated,SessionLogonTime_s)\r\nby SessionUser_s\r\n| project \r\n[\"Microphone redirection\"]= AudioPolicyAllowMicrophoneRedirection_b,\r\n[\"Audio redirection\"]= AudioPolicyAllowRedirection_b,\r\n[\"Audio channel priority\"]= AudioPolicyPriority_s,\r\n[\"Sound quality\"]= AudioPolicySoundQuality_s,\r\n[\"Client drive mapping\"]= CdmPolicyAllowDriveRedirection_b,\r\n[\"Read-only client drive access\"]= CdmPolicyReadOnly_b,\r\n[\"CDM channel priority\"]= CdmPolicyPriority_s,\r\n[\"Thinwire FPS\"]= toint(ThinwirePolicyFps_d),\r\n[\"Thinwire channel priority\"]= ThinwirePolicyPriority_s,\r\n[\"Thinwire hardware encoding\"]= ThinwirePolicyUseHardwareEncoding_b,\r\n[\"Thinwire video codec\"]= ThinwirePolicyUseVideoCodec_s,\r\n[\"Thinwire visual quality\"]= ThinwirePolicyVisualQuality_s,\r\n[\"Session reliability connections\"]= NetworkPolicyAcceptSessionReliabilityConnections_b,\r\n[\"Session reliability port\"]= toint(NetworkPolicySessionReliabilityPort_d),\r\n[\"Session reliability timeout (s)\"]= toint(NetworkPolicySessionReliabilityTimeout_d),\r\n[\"ICA listener port\"]= toint(NetworkPolicyICAListenerPortNumber_d),\r\n[\"Printer redirection\"]= PrinterPolicyAllowRedirection_b,\r\n[\"Printer channel priority\"]= PrinterPolicyPriority_s,\r\n[\"Auto-create client printers\"]= toint(PrinterPolicyAutoCreateClientPrinters_d),\r\n[\"USB PNP redirection\"]= USBPolicyAllowPNPRedirection_b,\r\n[\"USB support\"]= USBPolicyAllowUSBSupport_b,\r\n[\"USB channel priority\"]= USBPolicyPriority_s,\r\n[\"Logon time\"]=SessionLogonTime_s,\r\nUser = SessionUser_s,\r\nHost = Computer\r\n| evaluate narrow()\r\n| extend Value = case(Value == \"true\", \"Allowed\", Value == \"false\", \"Disallowed\", Value)\r\n| project [\"Policy\"] = Column, [\"${query0}\"] = Value\r\n| sort by Policy asc\r\n",
             "resources": [
               "$Workspace"
             ],
-            "resultFormat": "logs"
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
@@ -972,13 +976,13 @@
     ]
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Session Usage - Single User Detail",
   "uid": "cdwr6jji2vta8c",
-  "version": 67,
+  "version": 76,
   "weekStart": ""
 }
