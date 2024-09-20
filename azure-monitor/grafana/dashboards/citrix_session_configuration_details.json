@@ -874,12 +874,13 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "dashboardTime": false,
+            "dashboardTime": true,
             "query": "uberAgent_Session_SessionDetail_CL\r\n| where isnotempty(SessionConnectionState_s) \r\n| summarize SessionConnectionStateLatest = arg_max(TimeGenerated, SessionConnectionState_s) by SessionPublishedAppsCtx_s\r\n| summarize count(SessionPublishedAppsCtx_s) by SessionConnectionState_s;",
             "resources": [
               "$Workspace"
             ],
-            "resultFormat": "logs"
+            "resultFormat": "logs",
+            "timeColumn": "TimeGenerated"
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
@@ -1243,13 +1244,13 @@
     ]
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Usage Visuallization - Sessions",
+  "title": "Usage Visualization - Sessions",
   "uid": "edw9a75dzhfk0b",
-  "version": 80,
+  "version": 85,
   "weekStart": ""
 }
