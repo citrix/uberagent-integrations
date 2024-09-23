@@ -13,7 +13,7 @@ Different tools can then be used to visualize the collected and stored metrics. 
 
 1. Log in to the Azure portal
 2. In all services, search for Log Analytics workspaces.
-![image](docImages/LogAnalyticsWorkspaceSearch.png) 
+![image](img/LogAnalyticsWorkspaceSearch.png) 
 3. Create a new workspace within the desired Subscription and Resource group
 
 ### Integrating uberAgent with Log Analytics workspace
@@ -30,9 +30,9 @@ Servers = https://<log-analytics-workspace-id>.ods.opinsights.azure.com
 RESTToken = <log-analytics-primary key>
 ```
 * Workspace ID and Primary Key can be found in : Settings →  Agents → Log Analytics agent instructions
-![image](docImages/AzureWSAgentPage.png) 
+![image](img/AzureWSAgentPage.png) 
 
 3. Restart the uberAgent service, and it should start sending data to the Log Analytics workspace.
 4. Verify if the data is received in Logs → Custom Logs to see the tables created
-![image](docImages/AzureWSTables.png) 
+![image](img/AzureWSTables.png) 
    

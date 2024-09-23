@@ -24,16 +24,16 @@
   - Go to App Registrations in Azure and create a new Registration.
   - Get Application (client) ID from the Overview Page.
   - In Manage → Certificates & secrets → Client secrets, Add a new client secret. Save the Value (Client secret)
-    ![image](docImages/AppRegistrationID.png)
-    ![image](docImages/AppRegistrationSecret.png)
+    ![image](img/AppRegistrationID.png)
+    ![image](img/AppRegistrationSecret.png)
   - In Log Analytics workspace → Access Control → Role assignments, search for the App registration and give **Contributor** role to it.
-    ![image](docImages/LogAnalyticsAccessControl.png)
+    ![image](img/LogAnalyticsAccessControl.png)
 
 #### Configure a Log Analytics data source in Grafana
 
 - Select "Connections" > "Data sources" > "Add new data source"
 - Find and select the "Azure Monitor" data source type
-    ![image](docImages/GrafanaDatasource.png)
+    ![image](img/GrafanaDatasource.png)
 - Fill the data source name and authentication information saved during App registration.
 - Click "Save & test"
 
@@ -43,16 +43,16 @@
 - Click on the "New" button and then select "Import"
 - Browse for and select the dashboard definition (.json file) to import
 - Select the Azure Monitor data source configured above
-    ![image](docImages/GrafanaImportDashboard.png)
+    ![image](img/GrafanaImportDashboard.png)
 - Click "Import"
 - The newly imported dashboard will then open.
 - In the selectors at the top, select the Subscription and the Log Analytics workspace. The data queries should then succeed and you should see the charts populated with data. If needed, you can adjust the selected time window.
 - After the Subscription and Workspace is selected, the dashboard can be saved by checking the below box to persist the selected values.
-  ![image](docImages/GrafanaSaveVariables.png)
+  ![image](img/GrafanaSaveVariables.png)
 
 #### Dashboard preview
-![image](docImages/GrafanaDashboardPreview.png)
+![image](img/GrafanaDashboardPreview.png)
 
 #### Updating a dashboard
 - While updating an existing dashboard, Import (Overwrite) the new JSON file, and keep the original UID
-  ![image](docImages/UpdatingGrafanaDashboard.png)
+  ![image](img/UpdatingGrafanaDashboard.png)
