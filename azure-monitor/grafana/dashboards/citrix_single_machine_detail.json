@@ -66,7 +66,7 @@
         "Citrix-uberAgent"
       ],
       "targetBlank": false,
-      "title": "Machine Usage - Single Machine Detail",
+      "title": "Machine Usage - Single Machine Details",
       "tooltip": "",
       "type": "dashboards",
       "url": ""
@@ -349,7 +349,8 @@
           ],
           "show": false
         },
-        "showHeader": true
+        "showHeader": true,
+        "sortBy": []
       },
       "pluginVersion": "11.1.4",
       "targets": [
@@ -447,10 +448,6 @@
                 "value": "right"
               },
               {
-                "id": "custom.axisLabel",
-                "value": "Data volume (MB)"
-              },
-              {
                 "id": "custom.fillOpacity",
                 "value": 50
               },
@@ -487,6 +484,10 @@
                   "fixedColor": "light-red",
                   "mode": "fixed"
                 }
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Data volume (MB)"
               }
             ]
           },

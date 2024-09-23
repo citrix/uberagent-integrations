@@ -646,6 +646,10 @@
               {
                 "id": "custom.fillOpacity",
                 "value": 50
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": ""
               }
             ]
           }
