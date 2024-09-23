@@ -36,7 +36,7 @@ This document will walk you through the steps to connect "UberAgent" installed i
 * Make sure your account has the necessary permissions to create a new workspace to CLI
   
 
- ![image](docImages/AzureMonitorInfoPage.png)
+ ![image](img/AzureMonitorInfoPage.png)
 
 
 #### Step 2 - Use powershell script or workbook files import the templates to your workspace
@@ -65,9 +65,9 @@ You can either use the [powershell script](https://github.com/citrix/uberagent-i
 * Open the first workbook file and copy the contents
 * Open Azure portal and navigate to your Log Analytics Workspace.
 * Click on "+New" icon
-![image](docImages/NewWorkbookNavigation.png)
+![image](img/NewWorkbookNavigation.png)
 * In the "New" screen, click on advanced editor
-![image](docImages/AdvancedEditor.png)
+![image](img/AdvancedEditor.png)
 * Paste the contents you copied from workspace file in "Gallery Template" tab
 * Click "Apply", "Done editing" and then the "Save" button
 * A prompt for populating some parameters will pop-up:
@@ -85,10 +85,10 @@ The `citrix_session_configuration_details` and `citrix_machine` can be linked to
 
 * in the "Workbooks" home page, in the tile corresponding to "citrix_single_machine_details", click on the 3 dots and select "View Resource"
 * Copy the resource id
-![image](docImages/CopyResourceID.png)
+![image](img/CopyResourceID.png)
 * Go back to "Workbooks" home page and click on the tile corresponding to the "citrix_session_configuration_details" and open the workbook
 * Click on "Edit" and go to "advanced editor"
-![image](docImages/AdvancedEditor.png)
+![image](img/AdvancedEditor.png)
 * In the Gallery template tab, search for "templateId".
 * Replace the TemplateId with the resource id of "citrix_single_machine_details" - The one you copied in the previous step
 * Click "Apply", and Save the workbook by pressing "Save" icon
