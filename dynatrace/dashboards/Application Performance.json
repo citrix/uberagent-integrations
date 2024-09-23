@@ -1,0 +1,596 @@
+{
+    "version": 15,
+    "variables": [],
+    "tiles": {
+        "0": {
+            "type": "markdown",
+            "title": "",
+            "content": "## Application Performance \nThis dashboard displays detailed information about application performance."
+        },
+        "1": {
+            "type": "data",
+            "title": "CPU per application (top 10)",
+            "query": "fetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:Process:ProcessDetail\"\n| parse content,\"JSON:json\"\n| fieldsAdd  AppId = json[AppId], ProcCPUPercent = json[ProcCPUPercent]\n| summarize {\nProcCPUPercent=avg(toDouble(ProcCPUPercent))\n},\nby:{AppId}\n| sort ProcCPUPercent desc\n| limit 10\n| fields AppId,ProcCPUPercent|fieldsRename `avg(ProcCPUPercent)`=ProcCPUPercent",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "categoricalBarChart",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxis": "AppId",
+                        "valueAxis": "avg(ProcCPUPercent)",
+                        "categoryAxisLabel": "AppId",
+                        "valueAxisLabel": "avg(ProcCPUPercent)",
+                        "layout": "horizontal",
+                        "tooltipVariant": "single"
+                    },
+                    "legend": {
+                        "hidden": true
+                    },
+                    "truncationMode": "middle"
+                },
+                "singleValue": {
+                    "showLabel": true,
+                    "label": "",
+                    "prefixIcon": "",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value",
+                    "recordField": "host"
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "avg(ProcCPUPercent)"
+                    },
+                    "displayedFields": [
+                        "AppId"
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "avg(ProcCPUPercent)",
+                            "rangeAxis": ""
+                        }
+                    ]
+                },
+                "unitsOverrides": [
+                    {
+                        "identifier": "ProcCPUPercent",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 2,
+                        "suffix": "",
+                        "delimiter": false,
+                        "added": 1725004567723
+                    }
+                ]
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "2024-08-28T16:00:00.000Z",
+                    "to": "2024-08-29T15:59:00.000Z"
+                }
+            }
+        },
+        "2": {
+            "type": "data",
+            "title": "IO count per session 0 (top 10)",
+            "query": "fetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:Process:ProcessDetail\" \n| parse content,\"JSON:json\"\n| fieldsAdd  AppId = json[AppId], ProcIOCount = toDouble(json[ProcIOReadCount]) + toDouble(json[ProcIOWriteCount])\n| filter AppId != \"MsWnOS\"\n| summarize {ProcIOCount=sum(toDouble(ProcIOCount))},by:{AppId}\n| sort ProcIOCount desc\n| limit 10\n| fields AppId,ProcIOCount",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "categoricalBarChart",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxis": "AppId",
+                        "valueAxis": "ProcIOCount",
+                        "categoryAxisLabel": "AppId",
+                        "valueAxisLabel": "sum(ProcIOCount)",
+                        "scale": "absolute",
+                        "layout": "horizontal",
+                        "categoryAxisTickLayout": "horizontal",
+                        "tooltipVariant": "single",
+                        "isCategoryLabelVisible": true
+                    },
+                    "truncationMode": "middle",
+                    "legend": {
+                        "hidden": true
+                    }
+                },
+                "singleValue": {
+                    "showLabel": true,
+                    "label": "",
+                    "prefixIcon": "",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value",
+                    "recordField": "host"
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "ProcIOCount"
+                    },
+                    "displayedFields": [
+                        "AppId"
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "ProcIOCount",
+                            "rangeAxis": ""
+                        }
+                    ]
+                }
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            }
+        },
+        "3": {
+            "type": "data",
+            "title": "Other metrics per application (top 10)",
+            "query": "fetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:Process:ProcessDetail\"\n| parse content,\"JSON:json\"\n| fieldsAdd  AppId = json[AppId], ProcNetKBPS = json[ProcNetKBPS]\n| filter AppId != \"MsWnOS\"\n| summarize {ProcNetKBPS=sum(toDouble(ProcNetKBPS))},by:{AppId}\n| sort ProcNetKBPS desc\n| limit 10\n| fields AppId,ProcNetKBPS|fieldsRename `sum(ProcNetKBPS)`=ProcNetKBPS",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "categoricalBarChart",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxis": "AppId",
+                        "valueAxis": "sum(ProcNetKBPS)",
+                        "categoryAxisLabel": "AppId",
+                        "valueAxisLabel": "sum(ProcNetKBPS)",
+                        "layout": "horizontal",
+                        "tooltipVariant": "single"
+                    },
+                    "truncationMode": "middle",
+                    "legend": {
+                        "hidden": true
+                    }
+                },
+                "singleValue": {
+                    "showLabel": true,
+                    "label": "",
+                    "prefixIcon": "",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value",
+                    "recordField": "host"
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "sum(ProcNetKBPS)"
+                    },
+                    "displayedFields": [
+                        "AppId"
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "sum(ProcNetKBPS)",
+                            "rangeAxis": ""
+                        }
+                    ]
+                },
+                "unitsOverrides": [
+                    {
+                        "identifier": "SessionCPUTimeS",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 2,
+                        "suffix": "",
+                        "delimiter": false,
+                        "added": 1725004567723
+                    }
+                ]
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "2024-08-28T16:00:00.000Z",
+                    "to": "2024-08-29T15:59:00.000Z"
+                }
+            }
+        },
+        "4": {
+            "type": "data",
+            "title": "RAM per application (top 10)",
+            "query": "fetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:Process:ProcessDetail\"\n| parse content,\"JSON:json\"\n| fieldsAdd  AppId = json[AppId], ProcWorkingSetMB = json[ProcWorkingSetMB]\n| filter AppId != \"MsWnOS\"\n| summarize {ProcWorkingSetMB=sum(toDouble(ProcWorkingSetMB))},by:{AppId}\n| sort ProcWorkingSetMB desc\n| limit 10\n| fields AppId,ProcWorkingSetMB",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "categoricalBarChart",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxis": "AppId",
+                        "valueAxis": "ProcWorkingSetMB",
+                        "categoryAxisLabel": "AppId",
+                        "valueAxisLabel": "sum(ProcWorkingSetMB)",
+                        "scale": "absolute",
+                        "layout": "horizontal",
+                        "categoryAxisTickLayout": "horizontal",
+                        "tooltipVariant": "single"
+                    },
+                    "truncationMode": "middle",
+                    "legend": {
+                        "hidden": true
+                    }
+                },
+                "singleValue": {
+                    "showLabel": true,
+                    "label": "",
+                    "prefixIcon": "",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value",
+                    "recordField": "host"
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "ProcWorkingSetMB"
+                    },
+                    "displayedFields": [
+                        "AppId"
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "ProcWorkingSetMB",
+                            "rangeAxis": ""
+                        }
+                    ]
+                }
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            }
+        },
+        "5": {
+            "type": "data",
+            "title": "Data table",
+            "query": "fetch logs\n|filter index==\"uberagent\" \nAND sourcetype==\"uberAgent:Process:ProcessDetail\" \nOR sourcetype==\"uberAgent:Process:ProcessStatistics\"\n| parse content,\"JSON:json\"\n| fieldsAdd  AppId = json[AppId],\nProcCPUTimeMs = json[ProcCPUTimeMs],\nProcIOReadCount=json[ProcIOReadCount],\nProcIOWriteCount=json[ProcIOWriteCount],\nProcIOCount=toDouble(ProcIOReadCount)+toDouble(ProcIOWriteCount),\nProcIOReadMB=json[ProcIOReadMB],\nProcIOWriteMB=json[ProcIOWriteMB],\nNetTargetSendDurationMs=1,\nNetTargetSendLatencyCount=2,\nProcIOMB=toDouble(ProcIOReadMB)+toDouble(ProcIOWriteMB),\nProcIODurationMs=toDouble(json[ProcIOLatencyReadMs2])*toDouble(ProcIOReadCount)+toDouble(json[ProcIOLatencyWriteMs2])*toDouble(ProcIOWriteCount)\n|summarize {\n    SumProcCPUTimeS=sum(toDouble(json[ProcCPUTimeMs])/1000),\n    `CPU (%)`=avg(toDouble(proccpupercent)),\n    `Total IO (count)`=sum(ProcIOCount),\n    `Total IO (MB)`=sum(ProcIOMB),\n    `Avg. IO latency (ms)`=if(sum(ProcIOCount)==0,\"\",else:sum(ProcIODurationMs)/sum(ProcIOCount)),\n    `RAM - Virtual (MB)`=avg(toDouble(procpagefilemb)),\n    `RAM (MB)`=avg(toDouble(procworkingsetmb)),\n    `Avg. net latency (ms)`=round(sum(NetTargetSendDurationMs)/sum(NetTargetSendLatencyCount),decimals:0),\n    `Handle count`=avg(toDouble(prochandlecount)),\n    `Thread count`=round(avg(toDouble(procthreadcount)),decimals:0)\n}, \nby:{appid,procname}\n|fieldsRename `App Id`=appid,\n`Process Name(s)`=procname,\n`Total CPU time (s)`=SumProcCPUTimeS",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "table",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxisLabel": "App Id",
+                        "valueAxisLabel": "Total CPU time (s)",
+                        "categoryAxis": "App Id",
+                        "valueAxis": "Total CPU time (s)",
+                        "tooltipVariant": "single"
+                    },
+                    "hiddenLegendFields": [],
+                    "truncationMode": "middle"
+                },
+                "singleValue": {
+                    "showLabel": true,
+                    "label": "",
+                    "prefixIcon": "",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value",
+                    "recordField": "host"
+                },
+                "table": {
+                    "rowDensity": "default",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {
+                        "[\"SumRAM\"]": 208.91841125488287,
+                        "[\"AvgIOLatency\"]": 207.849609375,
+                        "[\"host\"]": 234.275390625,
+                        "[\"StartUpTime\"]": 353.365234375,
+                        "[\"LastSeen\"]": 258.654296875,
+                        "[\"SumProcesses\"]": 190.259765625,
+                        "[\"SumCPU\"]": 227.388671875,
+                        "[\"SumIOPS\"]": 208.583984375,
+                        "[\"SumIOVolumn\"]": 219.48828125,
+                        "[\"procname\"]": 214.32293701171875
+                    },
+                    "sortBy": {
+                        "columnId": "[\"Avg. IO latency (ms)\"]",
+                        "direction": "ascending"
+                    }
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "Total CPU time (s)"
+                    },
+                    "displayedFields": [
+                        "App Id"
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "Total CPU time (s)",
+                            "rangeAxis": ""
+                        },
+                        {
+                            "valueAxis": "CPU (%)",
+                            "rangeAxis": ""
+                        },
+                        {
+                            "valueAxis": "Total IO (count)",
+                            "rangeAxis": ""
+                        },
+                        {
+                            "valueAxis": "Total IO (MB)",
+                            "rangeAxis": ""
+                        },
+                        {
+                            "valueAxis": "RAM - Virtual (MB)",
+                            "rangeAxis": ""
+                        },
+                        {
+                            "valueAxis": "RAM (MB)",
+                            "rangeAxis": ""
+                        },
+                        {
+                            "valueAxis": "Avg. net latency (ms)",
+                            "rangeAxis": ""
+                        },
+                        {
+                            "valueAxis": "Handle count",
+                            "rangeAxis": ""
+                        },
+                        {
+                            "valueAxis": "Thread count",
+                            "rangeAxis": ""
+                        }
+                    ]
+                },
+                "unitsOverrides": [
+                    {
+                        "identifier": "Thread count",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 0,
+                        "suffix": "",
+                        "delimiter": false,
+                        "added": 1726372423791
+                    },
+                    {
+                        "identifier": "Handle count",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 0,
+                        "suffix": "",
+                        "delimiter": false,
+                        "added": 1726372563496
+                    },
+                    {
+                        "identifier": "CPU (%)",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 1,
+                        "suffix": "",
+                        "delimiter": false,
+                        "added": 1726732407781
+                    },
+                    {
+                        "identifier": "Total CPU time (s)",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 1,
+                        "suffix": "",
+                        "delimiter": false,
+                        "added": 1726732414267
+                    }
+                ]
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "now()-2h",
+                    "to": "now()"
+                }
+            }
+        }
+    },
+    "layouts": {
+        "0": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 2
+        },
+        "1": {
+            "x": 0,
+            "y": 2,
+            "w": 11,
+            "h": 8
+        },
+        "2": {
+            "x": 11,
+            "y": 2,
+            "w": 13,
+            "h": 8
+        },
+        "3": {
+            "x": 11,
+            "y": 10,
+            "w": 13,
+            "h": 9
+        },
+        "4": {
+            "x": 0,
+            "y": 10,
+            "w": 11,
+            "h": 9
+        },
+        "5": {
+            "x": 0,
+            "y": 19,
+            "w": 24,
+            "h": 12
+        }
+    },
+    "importedWithCode": false
+}
