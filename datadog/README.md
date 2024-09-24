@@ -2,10 +2,13 @@
 ## Integrating uberAgent with Datadog and importing dashboards
 
 ### Table of contents
-- [uberAgent integration with Datadog](#uberagent-integration-with-datadog)
-- [Configuring Logstash to read from Kafka](#configuring-logstash-to-read-from-kafka)
-- [Configuring Logstash to forward records to Datadog](#configuring-logstash-to-forward-records-to-datadog)
-- [References](#references)
+- [Integrating uberAgent with Datadog and importing dashboards](#integrating-uberagent-with-datadog-and-importing-dashboards)
+  - [Table of contents](#table-of-contents)
+  - [uberAgent integration with Datadog](#uberagent-integration-with-datadog)
+  - [Configuring Logstash to read from Kafka](#configuring-logstash-to-read-from-kafka)
+  - [Configuring Logstash to forward records to Datadog](#configuring-logstash-to-forward-records-to-datadog)
+  - [Importing Datadog dashboards](#importing-datadog-dashboards)
+  - [References](#references)
 
 
 ### uberAgent integration with Datadog
@@ -28,18 +31,60 @@ input {
   kafka {
     bootstrap_servers => "broker:29092"
     topics => [
-              "uberAgent_System_SystemPerformanceSummary2",
+              "uberAgent_Process_LogoffProcesses",
+              "uberAgent_Citrix_PublishedDesktops",
+              "uberAgent_Application_SoftwareUpdateInventory",
+              "uberAgent_System_MachineInventory",
+              "uberAgent_System_VolumeInventory",
+              "uberAgent_Application_NetworkConnectFailure",
+              "uberAgent_Citrix_Applications",
+              "uberAgent_Logoff_LogoffDetail",
+              "uberAgentESA_Process_ProcessStop",
+              "uberAgent_System_NetworkConfigInformation",
+              "uberAgent_Application_BrowserPerformanceChrome",
+              "uberAgent_System_DiskInventory",
+              "uberAgent_OnOffTransition_ShutdownDetail",
+              "uberAgent_Process_ProcessStartup",
+              "uberAgent_OnOffTransition_SlowUserPolicy",
+              "uberAgent_OnOffTransition_BootDetail2",
+              "uberAgent_Citrix_Machines",
+              "uberAgent_OnOffTransition_SlowServiceStartup",
+              "uberAgent_System_SmbClient",
               "uberAgent_Process_NetworkTargetPerformance",
-              "uberAgent_Config_ConfigInfo",
+              "uberAgent_Application_Errors",
+              "uberAgent_System_Bugcheck",
               "uberAgentESA_Process_DnsQuery",
-              "uberAgentESA_System_ScheduledTasks",
+              "uberAgent_Citrix_Databases",
+              "uberAgent_System_MonitorInventory",
+              "uberAgent_Citrix_DesktopGroups",
+              "uberAgent_License_LicenseInfo",
+              "uberAgentESA_ActivityMonitoring_ProcessTagging",
+              "uberAgent_Citrix_Licenses",
+              "uberAgent_OnOffTransition_SlowSMSSInit",
               "uberAgent_Application_UIDelay",
-              "uberAgent_System_GpuUsageEngine",
-              "uberAgent_Process_ProcessDetail",
               "uberAgentESA_System_ScheduledTaskTriggers",
+              "uberAgent_OnOffTransition_SlowAppStartup",
               "uberAgentESA_System_ScheduledTaskActions",
+              "uberAgent_Process_LogonProcesses",
+              "uberAgent_OnOffTransition_BootProcesses",
+              "uberAgent_System_SystemPerformanceSummary2",
+              "uberAgent_Application_ApplicationInventory",
+              "uberAgent_CitrixSession_VirtualChannelDetail",
+              "uberAgent_OnOffTransition_BootProcessDetail",
+              "uberAgent_CitrixSession_SessionConfig",
+              "uberAgent_Logon_GroupPolicyCSEDetail2",
+              "uberAgent_Config_ConfigInfo",
+              "uberAgentESA_System_ScheduledTasks",
+              "uberAgent_Citrix_Catalogs",
+              "uberAgent_System_GpuUsageEngine",
+              "uberAgent_OnOffTransition_SlowServiceShutdown",
+              "uberAgent_Process_ProcessDetail",
+              "uberAgentESA_System_SecurityInventory",
+              "uberAgent_Application_AppNameIdMapping",
               "uberAgent_Session_SessionDetail",
-              "uberAgent_System_GpuUsage"
+              "uberAgent_Process_ProcessStatistics",
+              "uberAgent_System_GpuUsage",
+              "uberAgent_Logon_LogonDetail"
             ]
     group_id => "logstash_group"
     auto_offset_reset => "earliest"
