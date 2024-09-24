@@ -41,7 +41,8 @@ You can either use the [powershell script](https://github.com/citrix/uberagent-i
 * Navigate to the AzureWorkbook folder
 * run the powershell script by running `.\deploy-workbooks.ps1`
 * It will ask for "Subscription Id", "Resource Group Name" and "Workspace Name"
-* You can copy the values from Azure Portal and paste them in the CLI by mouse right click
+* You can copy the values from Azure Portal and paste them in the CLI (ctrl+v or mouse right click)
+* You can also run the script passing all the parameters in a single step by running `.\deploy-workbooks.ps1 -subscriptionId <Your Subscription ID> -WorkspaceName <Your Workspace Name> -resourceGroup <Your Resource Group>`
 * The script will import the templates to your Azure Workbooks
 
 ##### Option 2 : Use the workbook files in the repo and manually add them to your workspace
