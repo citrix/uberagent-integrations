@@ -1,0 +1,1598 @@
+{
+    "version": 15,
+    "variables": [
+        {
+            "key": "hours",
+            "type": "code",
+            "visible": false,
+            "input": "export default async function () {\n    var from = $dt_timeframe_from;\n    var to = $dt_timeframe_to;\n    var x = new Date(from);\n    var y = new Date(to);\n    let hours = Math.abs(x.getTime() - y.getTime()) / 1000 / 60 / 60;\n    return [hours.toString()];\n}",
+            "multiple": false
+        },
+        {
+            "key": "VcNotInUse",
+            "type": "query",
+            "visible": false,
+            "input": "fetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:CitrixSession:VirtualChannelDetail\"\n| parse content,\"JSON:json\"\n| fieldsAdd SumSessionDataVolumeMB=toDouble(json[VirtualChannelDataVolumeOutputMB])+toDouble(json[VirtualChannelDataVolumeInputMB])\n| summarize SumSessionDataVolumeMB=round(sum(SumSessionDataVolumeMB),decimals:1),by:{virtualchannelvendorname}\n| fieldsAdd \nVcInUse=if(SumSessionDataVolumeMB>0, 1,else:0),\nVcNotInUse=if(SumSessionDataVolumeMB<=0,1,else:0)\n|summarize {a=sum(VcInUse),b=sum(VcNotInUse)}\n| fields b",
+            "multiple": false
+        },
+        {
+            "key": "VcInUse",
+            "type": "query",
+            "visible": false,
+            "input": "// #Virtual channel(s) in use/total:\nfetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:CitrixSession:VirtualChannelDetail\"\n| parse content,\"JSON:json\"\n| fieldsAdd SumSessionDataVolumeMB=toDouble(json[VirtualChannelDataVolumeOutputMB])+toDouble(json[VirtualChannelDataVolumeInputMB])\n| summarize SumSessionDataVolumeMB=round(sum(SumSessionDataVolumeMB),decimals:1),by:{virtualchannelvendorname}\n| fieldsAdd \nVcInUse=if(SumSessionDataVolumeMB>0, 1,else:0),\nVcNotInUse=if(SumSessionDataVolumeMB<=0,1,else:0)\n|summarize {a=sum(VcInUse),b=sum(VcNotInUse)}\n| fields a",
+            "multiple": false
+        },
+        {
+            "key": "VcTotal",
+            "type": "query",
+            "visible": false,
+            "input": "// #Virtual channel(s) in use/total:\nfetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:CitrixSession:VirtualChannelDetail\"\n| parse content,\"JSON:json\"\n| fieldsAdd SumSessionDataVolumeMB=toDouble(json[VirtualChannelDataVolumeOutputMB])+toDouble(json[VirtualChannelDataVolumeInputMB])\n| summarize SumSessionDataVolumeMB=round(sum(SumSessionDataVolumeMB),decimals:1),by:{virtualchannelvendorname}\n| fieldsAdd \nVcInUse=if(SumSessionDataVolumeMB>0, 1,else:0),\nVcNotInUse=if(SumSessionDataVolumeMB<=0,1,else:0)\n|summarize {a=sum(VcInUse),b=sum(VcNotInUse)}\n| fields VcTotal=a+b",
+            "multiple": false
+        }
+    ],
+    "tiles": {
+        "0": {
+            "type": "data",
+            "title": "Session data volume (top 10)",
+            "query": "fetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:CitrixSession:VirtualChannelDetail\"\n| parse content,\"JSON:json\"\n| fieldsAdd  \nVirtualChannelDataVolumeInputMB = json[VirtualChannelDataVolumeInputMB],\nVirtualChannelDataVolumeOutputMB = json[VirtualChannelDataVolumeOutputMB],\nSessionGUID = json[SessionGUID],\nSessionUser = json[SessionUser]\n| summarize {\n    `Iutput volume (MB)`=sum(round(toDouble(VirtualChannelDataVolumeInputMB),decimals:1)),\n    `Output volume (MB)`=sum(round(toDouble(VirtualChannelDataVolumeOutputMB),decimals:1)),\n    `Input+Output (MB)`=sum(round(toDouble(VirtualChannelDataVolumeInputMB),decimals:1)+round(toDouble(VirtualChannelDataVolumeOutputMB),decimals:1)),\n    User=takeLast(SessionUser),\n    Host=takeLast(host)\n},by:{SessionGUID}\n| fieldsAdd UserHost = concat(User, \"@\", Host)\n| sort `Input+Output (MB)` desc\n| limit 10",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "categoricalBarChart",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxis": "UserHost",
+                        "valueAxis": [
+                            "Iutput volume (MB)",
+                            "Output volume (MB)"
+                        ],
+                        "categoryAxisLabel": "UserHost",
+                        "valueAxisLabel": "Iutput volume (MB),Output volume (MB)",
+                        "layout": "horizontal",
+                        "tooltipVariant": "single",
+                        "colorPaletteMode": "single-color",
+                        "isValueLabelVisible": false,
+                        "scale": "absolute"
+                    },
+                    "hiddenLegendFields": [],
+                    "legend": {
+                        "hidden": true
+                    },
+                    "truncationMode": "middle"
+                },
+                "singleValue": {
+                    "showLabel": true,
+                    "label": "",
+                    "prefixIcon": "",
+                    "recordField": "timestamp",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value"
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {
+                        "[\"index\"]": 132.45833587646484
+                    }
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "Iutput volume (MB)"
+                    },
+                    "displayedFields": [
+                        "SessionGUID"
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "Iutput volume (MB)",
+                            "rangeAxis": ""
+                        },
+                        {
+                            "valueAxis": "Output volume (MB)",
+                            "rangeAxis": ""
+                        },
+                        {
+                            "valueAxis": "Input+Output (MB)",
+                            "rangeAxis": ""
+                        }
+                    ]
+                },
+                "unitsOverrides": [
+                    {
+                        "identifier": "Output volume (MB)",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 1,
+                        "suffix": "",
+                        "delimiter": false,
+                        "added": 1725955154085
+                    },
+                    {
+                        "identifier": "Iutput volume (MB)",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 2,
+                        "suffix": "",
+                        "delimiter": false,
+                        "added": 1726311324553
+                    }
+                ]
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "now()-10d",
+                    "to": "now()"
+                }
+            }
+        },
+        "1": {
+            "type": "data",
+            "title": "Data table",
+            "query": "// Data table\nfetch logs\n|filter index==\"uberagent\" AND sourcetype==\"uberAgent:Session:SessionDetail\"\nand sessionid!=\"0\"\n|parse content,\"JSON:json\"\n|fieldsAdd SessionUser=json[SessionUser], \nSessionGUID=json[SessionGUID],\nSessionConnectionState=json[SessionConnectionState],\nSessionLogonTime=json[SessionLogonTime]\n|summarize \n{\n    UniqueSessions=countdistinct(sessionid),\n    LastSeen=takeLast(timestamp),\n    `Logon time`=max(SessionLogonTime),\n    User=takeLast(SessionUser),\n    Host=takeLast(host),\n    SessionLast=takeLast(SessionConnectionState)\n},by:{SessionGUID}\n| fields SessionGUID,User,Host,\n`Logon time`,\n`Last seen`=LastSeen,\n`Last state`=SessionLast\n|join [\n    //VirtualChannelDetail\n    fetch logs\n    | filter index==\"uberagent\" and sourcetype==\"uberAgent:CitrixSession:VirtualChannelDetail\"\n    | parse content,\"JSON:json\"\n    | fieldsAdd VirtualChannelDataVolumeInputOutputMB=toDouble(json[VirtualChannelDataVolumeOutputMB])+toDouble(json[VirtualChannelDataVolumeInputMB]),\n    SessionGUID=json[SessionGUID]\n    | summarize \n    {\n        `Total data volume`=sum(VirtualChannelDataVolumeInputOutputMB),\n        `Avg. data volume`=avg(VirtualChannelDataVolumeInputOutputMB)\n    },by:{SessionGUID}\n    | fields `Avg. data volume`,`Total data volume`, SessionGUID\n\n], on:{SessionGUID}\n| fieldsRename   `Avg. data volume`= `right.Avg. data volume`\n| fieldsRename  `Total data volume`=`right.Total data volume`\n| fieldsRemove SessionGUID,\"right.*\"",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "table",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxisLabel": "User",
+                        "valueAxisLabel": "Avg. data volume",
+                        "tooltipVariant": "single",
+                        "categoryAxis": "User",
+                        "valueAxis": "Avg. data volume"
+                    },
+                    "hiddenLegendFields": [],
+                    "truncationMode": "middle",
+                    "fieldMapping": {
+                        "timestamp": "Last seen",
+                        "leftAxisValues": [
+                            "Avg. data volume"
+                        ],
+                        "leftAxisDimensions": [
+                            "User"
+                        ]
+                    }
+                },
+                "singleValue": {
+                    "showLabel": true,
+                    "label": "",
+                    "prefixIcon": "",
+                    "recordField": "timestamp",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value"
+                },
+                "table": {
+                    "rowDensity": "default",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "Avg. data volume"
+                    },
+                    "displayedFields": [
+                        "User"
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "Avg. data volume",
+                            "rangeAxis": ""
+                        },
+                        {
+                            "valueAxis": "Total data volume",
+                            "rangeAxis": ""
+                        }
+                    ]
+                },
+                "unitsOverrides": [
+                    {
+                        "identifier": "Avg. data volume",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 1,
+                        "suffix": "MB",
+                        "delimiter": false,
+                        "added": 1726633120374
+                    },
+                    {
+                        "identifier": "Total data volume",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 1,
+                        "suffix": "MB",
+                        "delimiter": false,
+                        "added": 1726633129442
+                    }
+                ]
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "now()-24h",
+                    "to": "now()"
+                }
+            }
+        },
+        "2": {
+            "type": "data",
+            "title": "Session data volume over time",
+            "query": "fetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:CitrixSession:VirtualChannelDetail\"\n| parse content,\"JSON:json\"\n| fieldsAdd  \nVirtualChannelDataVolumeOutputMB = json[VirtualChannelDataVolumeOutputMB],\nVirtualChannelDataVolumeInputMB = json[VirtualChannelDataVolumeInputMB]\n| makeTimeseries  {\n    `Input volume`=avg(toDouble(VirtualChannelDataVolumeInputMB)),\n    `Output volume`=sum(toDouble(VirtualChannelDataVolumeOutputMB))\n}",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "barChart",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxisLabel": "sessionguid",
+                        "valueAxisLabel": "VirtualChannelDataVolumeOutputMB",
+                        "categoryAxisTickLayout": "horizontal",
+                        "scale": "absolute",
+                        "layout": "horizontal"
+                    },
+                    "legend": {
+                        "hidden": false,
+                        "position": "bottom"
+                    },
+                    "fieldMapping": {
+                        "timestamp": "timeframe",
+                        "leftAxisValues": [
+                            "Input volume",
+                            "Output volume"
+                        ],
+                        "leftAxisDimensions": []
+                    },
+                    "hiddenLegendFields": [],
+                    "leftYAxisSettings": {
+                        "isLabelVisible": false
+                    },
+                    "xAxisIsLabelVisible": false,
+                    "tooltip": {
+                        "seriesDisplayMode": "single-line"
+                    }
+                },
+                "singleValue": {
+                    "showLabel": true,
+                    "label": "",
+                    "prefixIcon": "",
+                    "recordField": "timestamp",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value"
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "interval"
+                    },
+                    "displayedFields": [
+                        null
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "interval",
+                            "rangeAxis": ""
+                        }
+                    ]
+                }
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "now()-24h",
+                    "to": "now()"
+                }
+            }
+        },
+        "4": {
+            "type": "markdown",
+            "title": "",
+            "content": "## Citrix Session Protocol Insights\nThis dashboard displays detailed information about Citrix HDX virtual channels and network metrics."
+        },
+        "5": {
+            "type": "data",
+            "title": "Average ICA latency/ICA RTT over time",
+            "query": "fetch logs\n| filter index==\"uberagent\" \nand sourcetype==\"uberAgent:Session:SessionDetail\"  and sessionid!=\"0\"\n| parse content,\"JSON:json\"\n| fieldsAdd SessionRpLatencyMs=toDouble(json[SessionRpLatencyMs2]),\nSessionRoundTripTimeMs=toDouble(json[SessionRoundTripTimeMs])\n| makeTimeseries  \n{\n    `Avg. ICA latency (ms)`=avg(SessionRpLatencyMs),\n    `Avg. ICA round-trip time (ms)`=avg(toDouble(SessionRoundTripTimeMs))\n}",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "lineChart",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxisLabel": "SessionUser",
+                        "valueAxisLabel": "UniqueSessions"
+                    },
+                    "fieldMapping": {
+                        "timestamp": "timeframe",
+                        "leftAxisValues": [
+                            "Avg. ICA latency (ms)",
+                            "Avg. ICA round-trip time (ms)"
+                        ],
+                        "leftAxisDimensions": []
+                    },
+                    "hiddenLegendFields": [],
+                    "legend": {
+                        "hidden": false,
+                        "position": "bottom"
+                    }
+                },
+                "singleValue": {
+                    "showLabel": true,
+                    "label": "",
+                    "prefixIcon": "",
+                    "recordField": "timestamp",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value"
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "interval"
+                    },
+                    "displayedFields": [
+                        null
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "interval",
+                            "rangeAxis": ""
+                        }
+                    ]
+                },
+                "unitsOverrides": [
+                    {
+                        "identifier": "Avg. ICA latency (ms)",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 2,
+                        "suffix": "",
+                        "delimiter": false,
+                        "added": 1725958546092
+                    }
+                ]
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "now()-24h",
+                    "to": "now()"
+                }
+            }
+        },
+        "6": {
+            "type": "data",
+            "title": "#Virtual channel(s) in use/total:",
+            "query": "// #Virtual channel(s) in use/total:\ndata record(result=concat($VcInUse, \"/\", $VcTotal))",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "singleValue",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxisLabel": "result",
+                        "valueAxisLabel": "a",
+                        "isCategoryLabelVisible": true,
+                        "layout": "horizontal",
+                        "tooltipVariant": "single"
+                    },
+                    "hiddenLegendFields": [],
+                    "truncationMode": "middle"
+                },
+                "singleValue": {
+                    "showLabel": false,
+                    "label": "",
+                    "prefixIcon": "",
+                    "recordField": "result",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value",
+                    "isIconVisible": true,
+                    "sparklineSettings": {
+                        "isVisible": true
+                    }
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "categorical",
+                    "dataMappings": {
+                        "value": "result"
+                    },
+                    "displayedFields": [
+                        "result"
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": []
+                },
+                "unitsOverrides": [
+                    {
+                        "identifier": "a",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 0,
+                        "suffix": "",
+                        "delimiter": false,
+                        "added": 1726043520242
+                    },
+                    {
+                        "identifier": "b",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 0,
+                        "suffix": "",
+                        "delimiter": false,
+                        "added": 1726043528095
+                    }
+                ]
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "2024-08-28T16:00:00.000Z",
+                    "to": "2024-08-29T15:59:00.000Z"
+                }
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            }
+        },
+        "7": {
+            "type": "data",
+            "title": "Avg. ICA round-trip time:",
+            "query": "fetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:Session:SessionDetail\" and sessionid!=\"0\"\n| parse content,\"JSON:json\"\n| fieldsAdd SessionRoundTripTimeMs = toDouble(json[SessionRoundTripTimeMs])\n| summarize result=avg(SessionRoundTripTimeMs)",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "singleValue",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxisLabel": "host",
+                        "valueAxisLabel": "SumProcesses",
+                        "isCategoryLabelVisible": true,
+                        "layout": "horizontal"
+                    },
+                    "hiddenLegendFields": []
+                },
+                "singleValue": {
+                    "showLabel": false,
+                    "label": "",
+                    "prefixIcon": "",
+                    "recordField": "result",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value",
+                    "isIconVisible": true
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "result"
+                    },
+                    "displayedFields": [
+                        null
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "result",
+                            "rangeAxis": ""
+                        }
+                    ]
+                },
+                "unitsOverrides": [
+                    {
+                        "identifier": "result",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 1,
+                        "suffix": "ms",
+                        "delimiter": false,
+                        "added": 1725007207928
+                    }
+                ]
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "2024-08-28T16:00:00.000Z",
+                    "to": "2024-08-29T15:59:00.000Z"
+                }
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            }
+        },
+        "8": {
+            "type": "data",
+            "title": "Avg. ICA latency:",
+            "query": "//Avg. ICA latency:\nfetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:Session:SessionDetail\" and sessionid!=\"0\"\n| parse content,\"JSON:json\"\n| fieldsAdd AvgSessionRpLatencyMs = toDouble(json[SessionRpLatencyMs2])\n| summarize result=avg(AvgSessionRpLatencyMs)",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "singleValue",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxisLabel": "content",
+                        "valueAxisLabel": "SessionRoundTripTimeMs",
+                        "isCategoryLabelVisible": true,
+                        "layout": "horizontal"
+                    },
+                    "hiddenLegendFields": []
+                },
+                "singleValue": {
+                    "showLabel": false,
+                    "label": "",
+                    "prefixIcon": "",
+                    "recordField": "result",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value",
+                    "isIconVisible": true
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "result"
+                    },
+                    "displayedFields": [
+                        null
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "result",
+                            "rangeAxis": ""
+                        }
+                    ]
+                },
+                "unitsOverrides": [
+                    {
+                        "identifier": "result",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 1,
+                        "suffix": "ms",
+                        "delimiter": false,
+                        "added": 1725007207928
+                    }
+                ]
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "2024-08-28T16:00:00.000Z",
+                    "to": "2024-08-29T15:59:00.000Z"
+                }
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            }
+        },
+        "9": {
+            "type": "data",
+            "title": "#Sessions:",
+            "query": "fetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:CitrixSession:VirtualChannelDetail\"\n| parse content,\"JSON:json\"\n| fieldsAdd Sessions=json[SessionGUID]\n| summarize NUM=countDistinct(Sessions)\n\n",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "singleValue",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxisLabel": "host",
+                        "valueAxisLabel": "SumProcesses",
+                        "isCategoryLabelVisible": true,
+                        "layout": "horizontal"
+                    },
+                    "hiddenLegendFields": []
+                },
+                "singleValue": {
+                    "showLabel": false,
+                    "label": "",
+                    "prefixIcon": "",
+                    "recordField": "NUM",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value",
+                    "isIconVisible": true
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "NUM"
+                    },
+                    "displayedFields": [
+                        null
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "NUM",
+                            "rangeAxis": ""
+                        }
+                    ]
+                },
+                "unitsOverrides": []
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "2024-08-28T16:00:00.000Z",
+                    "to": "2024-08-29T15:59:00.000Z"
+                }
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            }
+        },
+        "11": {
+            "type": "markdown",
+            "title": "",
+            "content": "###### Citrix session overview"
+        },
+        "12": {
+            "type": "data",
+            "title": "Hosts:",
+            "query": "fetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:CitrixSession:VirtualChannelDetail\"\n| summarize NUM=countDistinct(host)\n\n\n",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "singleValue",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxisLabel": "host",
+                        "valueAxisLabel": "SumProcesses",
+                        "isCategoryLabelVisible": true,
+                        "layout": "horizontal"
+                    },
+                    "hiddenLegendFields": []
+                },
+                "singleValue": {
+                    "showLabel": false,
+                    "label": "",
+                    "prefixIcon": "",
+                    "recordField": "NUM",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value",
+                    "isIconVisible": true
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "NUM"
+                    },
+                    "displayedFields": [
+                        null
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "NUM",
+                            "rangeAxis": ""
+                        }
+                    ]
+                },
+                "unitsOverrides": [
+                    {
+                        "identifier": "NUM",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 0,
+                        "suffix": "",
+                        "delimiter": false,
+                        "added": 1725007207928
+                    }
+                ]
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "2024-08-28T16:00:00.000Z",
+                    "to": "2024-08-29T15:59:00.000Z"
+                }
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            }
+        },
+        "13": {
+            "type": "data",
+            "title": "Users:",
+            "query": "fetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:CitrixSession:VirtualChannelDetail\"\n| parse content,\"JSON:json\"\n| fieldsAdd Users = json[SessionUser]\n| summarize NUM=countDistinct(Users)",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "singleValue",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxisLabel": "host",
+                        "valueAxisLabel": "SumProcesses",
+                        "isCategoryLabelVisible": true,
+                        "layout": "horizontal"
+                    },
+                    "hiddenLegendFields": []
+                },
+                "singleValue": {
+                    "showLabel": false,
+                    "label": "",
+                    "prefixIcon": "",
+                    "recordField": "NUM",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value",
+                    "isIconVisible": true
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "NUM"
+                    },
+                    "displayedFields": [
+                        null
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "NUM",
+                            "rangeAxis": ""
+                        }
+                    ]
+                },
+                "unitsOverrides": [
+                    {
+                        "identifier": "NUM",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 0,
+                        "suffix": "",
+                        "delimiter": false,
+                        "added": 1725007207928
+                    }
+                ]
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "2024-08-28T16:00:00.000Z",
+                    "to": "2024-08-29T15:59:00.000Z"
+                }
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            }
+        },
+        "14": {
+            "type": "data",
+            "title": "Avg. session data volume/hour:",
+            "query": "fetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:CitrixSession:VirtualChannelDetail\"\n| parse content,\"JSON:json\"\n| fieldsAdd SumSessionDataVolumeMB=toDouble(json[VirtualChannelDataVolumeOutputMB])+toDouble(json[VirtualChannelDataVolumeInputMB])\n| summarize SumSessionDataVolumeMB=sum(SumSessionDataVolumeMB)/toDouble($hours)",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "singleValue",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxisLabel": "host",
+                        "valueAxisLabel": "SumProcesses",
+                        "isCategoryLabelVisible": true,
+                        "layout": "horizontal"
+                    },
+                    "hiddenLegendFields": []
+                },
+                "singleValue": {
+                    "showLabel": false,
+                    "label": "",
+                    "prefixIcon": "",
+                    "recordField": "SumSessionDataVolumeMB",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value",
+                    "isIconVisible": true
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "SumSessionDataVolumeMB"
+                    },
+                    "displayedFields": [
+                        null
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "SumSessionDataVolumeMB",
+                            "rangeAxis": ""
+                        }
+                    ]
+                },
+                "unitsOverrides": [
+                    {
+                        "identifier": "SumSessionDataVolumeMB",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 1,
+                        "suffix": "MB",
+                        "delimiter": false,
+                        "added": 1725007207928
+                    }
+                ]
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "2024-08-28T16:00:00.000Z",
+                    "to": "2024-08-29T15:59:00.000Z"
+                }
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            }
+        },
+        "15": {
+            "type": "data",
+            "title": "Average ICA latency/ICA round-trip time (top 10)",
+            "query": "fetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:Session:SessionDetail\"\n| parse content,\"JSON:json\"\n| fieldsAdd  \nSessionRpLatencyMs = toDouble(json[SessionRpLatencyMs2]),\nSessionRoundTripTimeMs = toDouble(json[SessionRoundTripTimeMs]),\nSessionGUID = json[SessionGUID],\nSessionUser = json[SessionUser]\n| summarize {\n    SessionRpLatencyMs=avg(toDouble(SessionRpLatencyMs)),\n    SessionRoundTripTimeMs=avg(toDouble(SessionRoundTripTimeMs)),\n    User=takeLast(SessionUser),\n    Host=takeLast(host)\n},by:{SessionGUID}\n| filter isNotNull(SessionRpLatencyMs)\n| sort SessionRpLatencyMs desc\n| fieldsAdd UserHost = concat(User, \"@\", Host)\n| limit 10",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "categoricalBarChart",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxis": "UserHost",
+                        "categoryAxisLabel": "UserHost",
+                        "valueAxisLabel": "SessionRpLatencyMs,SessionRoundTripTimeMs",
+                        "valueAxis": [
+                            "SessionRpLatencyMs",
+                            "SessionRoundTripTimeMs"
+                        ],
+                        "tooltipVariant": "single",
+                        "colorPaletteMode": "single-color",
+                        "layout": "horizontal",
+                        "groupMode": "grouped",
+                        "isValueLabelVisible": false
+                    },
+                    "hiddenLegendFields": [],
+                    "truncationMode": "middle",
+                    "legend": {
+                        "hidden": true
+                    }
+                },
+                "singleValue": {
+                    "showLabel": true,
+                    "label": "",
+                    "prefixIcon": "",
+                    "recordField": "timestamp",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value"
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {
+                        "[\"index\"]": 132.45833587646484
+                    }
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "SessionRpLatencyMs"
+                    },
+                    "displayedFields": [
+                        "SessionGUID"
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "SessionRpLatencyMs",
+                            "rangeAxis": ""
+                        },
+                        {
+                            "valueAxis": "SessionRoundTripTimeMs",
+                            "rangeAxis": ""
+                        }
+                    ]
+                }
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "now()-10d",
+                    "to": "now()"
+                }
+            }
+        },
+        "16": {
+            "type": "data",
+            "title": "Virtual channel usage",
+            "query": "data record(name = \"Virtual channel(s) in use\", num= toLong($VcInUse)),\n     record(name = \"Virtual channel(s) not in use\", num= toLong($VcNotInUse))",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "pieChart",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative",
+                        "hideLabels": false
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxisLabel": "name",
+                        "valueAxisLabel": "num",
+                        "categoryAxisTickLayout": "horizontal",
+                        "scale": "absolute",
+                        "layout": "horizontal",
+                        "categoryAxis": "name",
+                        "valueAxis": "num",
+                        "tooltipVariant": "single"
+                    },
+                    "legend": {
+                        "hidden": false,
+                        "position": "bottom"
+                    },
+                    "hiddenLegendFields": [],
+                    "colorPalette": "swamps",
+                    "truncationMode": "end"
+                },
+                "singleValue": {
+                    "showLabel": true,
+                    "label": "",
+                    "prefixIcon": "",
+                    "recordField": "timestamp",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value"
+                },
+                "table": {
+                    "rowDensity": "condensed",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {}
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "num"
+                    },
+                    "displayedFields": [
+                        "name"
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "num",
+                            "rangeAxis": ""
+                        }
+                    ]
+                }
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "now()-24h",
+                    "to": "now()"
+                }
+            }
+        },
+        "17": {
+            "type": "data",
+            "title": "Virtual channel list",
+            "query": "// Virtual channel list\nfetch logs\n| filter index==\"uberagent\" and sourcetype==\"uberAgent:CitrixSession:VirtualChannelDetail\"\n| parse content,\"JSON:json\"\n| fieldsAdd \nVirtualChannelDataVolumeInputOutputMB=toDouble(json[VirtualChannelDataVolumeOutputMB])+toDouble(json[VirtualChannelDataVolumeInputMB]),\nVirtualChannelVendorName=json[VirtualChannelVendorName]\n| summarize SumSessionDataVolumeMB=round(sum(VirtualChannelDataVolumeInputOutputMB),decimals:1), \nby: {VirtualChannelVendorName}\n| fieldsAdd VcInUse=if(SumSessionDataVolumeMB>0,1,else:0),\nVcNotInUse=if(SumSessionDataVolumeMB<=0,1,else:0)\n| fieldsRename `Total data volume (MB)`=SumSessionDataVolumeMB,\n`Virtual channel` = VirtualChannelVendorName\n| fields `Virtual channel`, `Total data volume (MB)`\n| sort `Total data volume (MB)` Desc",
+            "davis": {
+                "enabled": false,
+                "davisVisualization": {
+                    "isAvailable": true
+                }
+            },
+            "visualization": "table",
+            "visualizationSettings": {
+                "thresholds": [],
+                "chartSettings": {
+                    "gapPolicy": "connect",
+                    "circleChartSettings": {
+                        "groupingThresholdType": "relative",
+                        "groupingThresholdValue": 0,
+                        "valueType": "relative"
+                    },
+                    "categoryOverrides": {},
+                    "categoricalBarChartSettings": {
+                        "categoryAxisLabel": "Virtual channel",
+                        "valueAxisLabel": "Total data volume (MB)",
+                        "categoryAxis": "Virtual channel",
+                        "valueAxis": "Total data volume (MB)"
+                    }
+                },
+                "singleValue": {
+                    "showLabel": true,
+                    "label": "",
+                    "prefixIcon": "",
+                    "recordField": "timestamp",
+                    "autoscale": true,
+                    "alignment": "center",
+                    "colorThresholdTarget": "value"
+                },
+                "table": {
+                    "rowDensity": "default",
+                    "enableSparklines": false,
+                    "hiddenColumns": [],
+                    "lineWrapIds": [],
+                    "columnWidths": {
+                        "[\"Virtual channel\"]": 262.03125
+                    },
+                    "colorThresholdTarget": "value"
+                },
+                "honeycomb": {
+                    "shape": "hexagon",
+                    "legend": {
+                        "hidden": false,
+                        "position": "auto"
+                    },
+                    "colorMode": "color-palette",
+                    "colorPalette": "blue",
+                    "dataMappings": {
+                        "value": "Total data volume (MB)"
+                    },
+                    "displayedFields": [
+                        "Virtual channel"
+                    ]
+                },
+                "histogram": {
+                    "dataMappings": [
+                        {
+                            "valueAxis": "Total data volume (MB)",
+                            "rangeAxis": ""
+                        }
+                    ]
+                },
+                "unitsOverrides": [
+                    {
+                        "identifier": "Total data volume (MB)",
+                        "unitCategory": "unspecified",
+                        "baseUnit": "none",
+                        "displayUnit": null,
+                        "decimals": 1,
+                        "suffix": "",
+                        "delimiter": false,
+                        "added": 1726043370182
+                    }
+                ]
+            },
+            "querySettings": {
+                "maxResultRecords": 1000,
+                "defaultScanLimitGbytes": 500,
+                "maxResultMegaBytes": 1,
+                "defaultSamplingRatio": 10,
+                "enableSampling": false
+            },
+            "timeframe": {
+                "tileTimeframeEnabled": false,
+                "tileTimeframe": {
+                    "from": "now()-24h",
+                    "to": "now()"
+                }
+            }
+        },
+        "18": {
+            "type": "markdown",
+            "title": "",
+            "content": "#### Data volume"
+        },
+        "19": {
+            "type": "markdown",
+            "title": "",
+            "content": "#### Network"
+        }
+    },
+    "layouts": {
+        "0": {
+            "x": 0,
+            "y": 6,
+            "w": 12,
+            "h": 5
+        },
+        "1": {
+            "x": 0,
+            "y": 23,
+            "w": 24,
+            "h": 7
+        },
+        "2": {
+            "x": 0,
+            "y": 11,
+            "w": 12,
+            "h": 6
+        },
+        "4": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 2
+        },
+        "5": {
+            "x": 12,
+            "y": 11,
+            "w": 12,
+            "h": 6
+        },
+        "6": {
+            "x": 19,
+            "y": 3,
+            "w": 5,
+            "h": 2
+        },
+        "7": {
+            "x": 14,
+            "y": 3,
+            "w": 5,
+            "h": 2
+        },
+        "8": {
+            "x": 10,
+            "y": 3,
+            "w": 4,
+            "h": 2
+        },
+        "9": {
+            "x": 4,
+            "y": 3,
+            "w": 2,
+            "h": 2
+        },
+        "11": {
+            "x": 0,
+            "y": 2,
+            "w": 24,
+            "h": 1
+        },
+        "12": {
+            "x": 0,
+            "y": 3,
+            "w": 2,
+            "h": 2
+        },
+        "13": {
+            "x": 2,
+            "y": 3,
+            "w": 2,
+            "h": 2
+        },
+        "14": {
+            "x": 6,
+            "y": 3,
+            "w": 4,
+            "h": 2
+        },
+        "15": {
+            "x": 12,
+            "y": 6,
+            "w": 12,
+            "h": 5
+        },
+        "16": {
+            "x": 0,
+            "y": 17,
+            "w": 12,
+            "h": 6
+        },
+        "17": {
+            "x": 12,
+            "y": 17,
+            "w": 12,
+            "h": 6
+        },
+        "18": {
+            "x": 0,
+            "y": 5,
+            "w": 12,
+            "h": 1
+        },
+        "19": {
+            "x": 12,
+            "y": 5,
+            "w": 12,
+            "h": 1
+        }
+    },
+    "importedWithCode": false
+}
