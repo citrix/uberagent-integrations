@@ -21,6 +21,9 @@ Different tools can then be used to visualize the collected and stored metrics. 
 1. Once uberAgent is installed in the required machine, go to the installed location. (By default would be : `C:\Program Files\vast limits\uberAgent`)
 2. Open the `uberAgent.conf` file and add the following Receiver entry in it. 
 
+For uberAgent 7.3 and above, `uberAgent.conf` is located in `Program Data\vast limits\uberAgent\Configuration` folder. For older versions, it is located in installation directory itself - `C:\Program Files\vast limits\uberAgent` by default
+[reference](https://docs.citrix.com/en-us/uberagent/7-3-0/installation/installing-uberagent/installing-the-endpoint-agent#configuration)
+
 ```
 [Receiver]
 Name = Default
@@ -32,7 +35,7 @@ RESTToken = <log-analytics-primary key>
 * Workspace ID and Primary Key can be found in : Settings →  Agents → Log Analytics agent instructions
 ![image](img/AzureWSAgentPage.png) 
 
-3. Restart the uberAgent service, and it should start sending data to the Log Analytics workspace.
-4. Verify if the data is received in Logs → Custom Logs to see the tables created
+1. Restart the uberAgent service, and it should start sending data to the Log Analytics workspace.
+2. Verify if the data is received in Logs → Custom Logs to see the tables created
 ![image](img/AzureWSTables.png) 
    
