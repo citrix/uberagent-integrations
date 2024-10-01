@@ -1,7 +1,7 @@
 ## Integration with Azure Monitor
 
 uberAgent can be configured to send the collected data to Microsoft Azure Monitor (Log Analytics).    
-The configuration steps are captured in the [documentation](https://docs.citrix.com/en-us/uberagent/7-3-0/installation/backend/configuring-microsoft-azure-oms-log-analytics).
+The configuration steps are captured in the [documentation](https://docs.citrix.com/en-us/uberagent/current-release/installation/backend/configuring-microsoft-azure-oms-log-analytics).
 
 Different tools can then be used to visualize the collected and stored metrics. Pre-built dashboard definitions can be found for
 * Azure Workbooks
@@ -18,11 +18,14 @@ Different tools can then be used to visualize the collected and stored metrics. 
 
 ### Integrating uberAgent with Log Analytics workspace
 
-1. Once uberAgent is installed in the required machine, go to the installed location. (By default would be : `C:\Program Files\vast limits\uberAgent`)
-2. Open the `uberAgent.conf` file and add the following Receiver entry in it. 
+1. Open the `uberAgent.conf` file.
+   
+       
+For uberAgent 7.3 and above, `uberAgent.conf` is located in `Program Data\vast limits\uberAgent\Configuration` folder. For older versions, it is located in installation directory itself - `C:\Program Files\vast limits\uberAgent` by default. 
+Reference:
+[documentation](https://docs.citrix.com/en-us/uberagent/current-release/installation/installing-uberagent/installing-the-endpoint-agent#configuration).
 
-For uberAgent 7.3 and above, `uberAgent.conf` is located in `Program Data\vast limits\uberAgent\Configuration` folder. For older versions, it is located in installation directory itself - `C:\Program Files\vast limits\uberAgent` by default
-[reference](https://docs.citrix.com/en-us/uberagent/7-3-0/installation/installing-uberagent/installing-the-endpoint-agent#configuration)
+2. Add the following Receiver entry in it.
 
 ```
 [Receiver]
