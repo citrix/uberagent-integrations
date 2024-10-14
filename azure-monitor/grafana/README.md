@@ -1,5 +1,7 @@
 ## How to import Grafana dashboards
 
+This document will walk you through the steps to visualize uberAgent metrics collected in Azure Monitor through Grafana dashboards. Example Grafana dashboard definitions are provided to easily get started with the metric visualizations.
+
 ### Table of contents
   - [Creating Azure Log Analytics workspace](#creating-azure-log-analytics-workspace)
   - [Integrating uberAgent with Log Analytics workspace](#integrating-uberagent-with-log-analytics-workspace)

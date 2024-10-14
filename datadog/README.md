@@ -1,4 +1,3 @@
-
 ## Integrating uberAgent with Datadog and importing dashboards
 
 ### Table of contents
@@ -13,7 +12,7 @@
 
 ### uberAgent integration with Datadog
 
-uberAgent does not currently directly integrate with platforms like Datadog. Thus, an indirect integration path needs to be followed. This involves the use of a Kafka instance and a Logstash instance.
+uberAgent does not currently directly integrate with platforms like Datadog. Datadog platform is NOT natively supported. Thus, an indirect integration path needs to be followed. This involves the use of a Kafka instance and a Logstash instance.
 
 ![image](img/uberagent-datadog-integration.png)
 
@@ -117,7 +116,7 @@ In the above configuration, please replace the
 As part of the integration of uberAgent with Datadog, logs are configured to get ingested in Datadog.
 Datadog automatically detects the log fields, allowing for dashboards to be built on top of them.
 
-A list of pre-built dashboards is provided [here](dashboards).
+A list of pre-built example dashboards is provided [here](dashboards).
 The dashboards can be imported into a Datadog instances following these steps:
 * In the Datadog UI, navigate to "Dashboards" > "New Dashboard".
 * Click on the "New Dashboard" button in the popup.
@@ -131,15 +130,15 @@ The dashboards can be imported into a Datadog instances following these steps:
 ### References
 
  - Kafka
-	 - [Kafka documentation](https://kafka.apache.org/documentation/)
-	 - [Configuring uberAgent with Kafka](https://docs.citrix.com/en-us/uberagent/current-release/installation/backend/configuring-apache-kafka-confluent-rest-proxy)
-	 - [Confluent REST Proxy](https://docs.confluent.io/platform/current/kafka-rest/index.html)
-	 - [Confluent Schema Registry](https://docs.confluent.io/platform/current/schema-registry/index.html)
+   - [Kafka documentation](https://kafka.apache.org/documentation/)
+   - [Configuring uberAgent with Kafka](https://docs.citrix.com/en-us/uberagent/current-release/installation/backend/configuring-apache-kafka-confluent-rest-proxy)
+   - [Confluent REST Proxy](https://docs.confluent.io/platform/current/kafka-rest/index.html)
+   - [Confluent Schema Registry](https://docs.confluent.io/platform/current/schema-registry/index.html)
  - Logstash
-	 - [Logstash introduction](https://www.elastic.co/guide/en/logstash/current/introduction.html)
-	 - [Kafka input plugin](https://www.elastic.co/guide/en/logstash/current/plugins-inputs-kafka.html)
-	 - [Datadog output plugin](https://www.elastic.co/guide/en/logstash/current/plugins-outputs-datadog.html)
+   - [Logstash introduction](https://www.elastic.co/guide/en/logstash/current/introduction.html)
+   - [Kafka input plugin](https://www.elastic.co/guide/en/logstash/current/plugins-inputs-kafka.html)
+   - [Datadog output plugin](https://www.elastic.co/guide/en/logstash/current/plugins-outputs-datadog.html)
 - Datadog
-	- [Datadog documentation](https://docs.datadoghq.com/)  
-	- [Observe and explore logs](https://docs.datadoghq.com/logs/)  
-	- [Get started with dashboards](https://docs.datadoghq.com/dashboards/)
+  - [Datadog documentation](https://docs.datadoghq.com/)  
+  - [Observe and explore logs](https://docs.datadoghq.com/logs/)  
+  - [Get started with dashboards](https://docs.datadoghq.com/dashboards/)
