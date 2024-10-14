@@ -1,14 +1,14 @@
-## Connecting Uber Agent Metrics to Azure Workbook
 
+## Connecting uberAgent Metrics to Azure Workbook
 
-This document will walk you through the steps to connect "UberAgent" installed in your Citrix components to the Azure Workbook through Azure Log Monitor and visualize them in a dashboard. 
+This document will walk you through the steps to visualize uberAgent metrics collected in Azure Monitor through Azure Workbooks. Example Azure Workbook definitions are provided to easily get started with the metric visualizations.
 
 ### Table of contents
   - [Creating Azure Log Analytics workspace](#creating-azure-log-analytics-workspace)
   - [Integrating uberAgent with Log Analytics workspace](#integrating-uberagent-with-log-analytics-workspace)
-  - [Import Azure workbook templates to your Azure Log Analytics Workspace](#import-azure-workbook-templates-to-your-azure-log-analytics-workspace)
-      - [Option 1 : Use powershell](#option-1--use-powershell)
-      - [Option 2 : Use the workbook files in the repo and manually add them to your workspace](#option-2--use-the-workbook-files-in-the-repo-and-manually-add-them-to-your-workspace)
+  - [Import Azure Workbook templates to your Azure Log Analytics Workspace](#import-azure-workbook-templates-to-your-azure-log-analytics-workspace)
+      - [Option 1: Use powershell](#option-1--use-powershell)
+      - [Option 2: Use the workbook files in the repo and manually add them to your workspace](#option-2--use-the-workbook-files-in-the-repo-and-manually-add-them-to-your-workspace)
         - [Importing workspace files](#importing-workspace-files)
         - [Linking the workspaces](#linking-the-workspaces)
 
@@ -81,6 +81,3 @@ The `citrix_session_configuration_details` and `citrix_machine` can be linked to
 * Replace the TemplateId with the resource id of "citrix_single_machine_details" - The one you copied in the previous step
 * Click "Apply", and Save the workbook by pressing "Save" icon
 * Repeat the same for citrix_single_machine_details by copying the resource id and pasting that resource id in the gallery template of citrix_machine workbook
-
-
-

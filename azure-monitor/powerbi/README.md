@@ -1,7 +1,7 @@
 ## How to use the PowerBI template
 
-For PowerBI, a template file (.pbit) is provided.
-The file includes a set of pre-built reports based on the collected uberAgent metrics.
+For PowerBI, an example template file (.pbit) is provided.
+The file includes a set of pre-built example reports based on the collected uberAgent metrics.
 The reports reference datasets which are generated from Kusto queries to the Log Analytics workspace which is configured to collect uberAgent metrics.
 
 ### Table of contents

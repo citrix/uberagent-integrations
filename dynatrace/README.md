@@ -1,4 +1,3 @@
-
 ## Integrating uberAgent with Dynatrace and importing dashboards
 
 ### Table of contents
@@ -13,7 +12,7 @@
 
 ### uberAgent integration with Dynatrace
 
-uberAgent does not currently directly integrate with platforms like Dynatrace. Thus, an indirect integration path needs to be followed. This involves the use of a Kafka instance and a Logstash instance.
+uberAgent does not currently directly integrate with platforms like Dynatrace. Dynatrace platform is NOT natively supported. Thus, an indirect integration path needs to be followed. This involves the use of a Kafka instance and a Logstash instance.
 
 ![image](img/uberagent-dynatrace-integration.png)
 
@@ -118,7 +117,7 @@ In the above configuration, please replace the
 As part of the integration of uberAgent with Dynatrace, logs are configured to get ingested in Dynatrace.
 Dynatrace automatically detects the log fields, allowing for dashboards to be built on top of them.
 
-A list of pre-built dashboards is provided [here](dashboards).
+A list of pre-built example dashboards is provided [here](dashboards).
 The dashboards can be imported into a Dynatrace instances following these steps:
 * In the Dynatrace UI, navigate to "Dashboards" > "Upload".
 * Browse for and select the dashboard .json file.
@@ -128,14 +127,14 @@ The dashboards can be imported into a Dynatrace instances following these steps:
 ### References
 
  - Kafka
-	 - [Kafka documentation](https://kafka.apache.org/documentation/)
-	 - [Configuring uberAgent with Kafka](https://docs.citrix.com/en-us/uberagent/current-release/installation/backend/configuring-apache-kafka-confluent-rest-proxy)
-	 - [Confluent REST Proxy](https://docs.confluent.io/platform/current/kafka-rest/index.html)
-	 - [Confluent Schema Registry](https://docs.confluent.io/platform/current/schema-registry/index.html)
+   - [Kafka documentation](https://kafka.apache.org/documentation/)
+   - [Configuring uberAgent with Kafka](https://docs.citrix.com/en-us/uberagent/current-release/installation/backend/configuring-apache-kafka-confluent-rest-proxy)
+   - [Confluent REST Proxy](https://docs.confluent.io/platform/current/kafka-rest/index.html)
+   - [Confluent Schema Registry](https://docs.confluent.io/platform/current/schema-registry/index.html)
  - Logstash
-	 - [Logstash introduction](https://www.elastic.co/guide/en/logstash/current/introduction.html)
-	 - [Kafka input plugin](https://www.elastic.co/guide/en/logstash/current/plugins-inputs-kafka.html)
-	 - [Datadog output plugin](https://www.elastic.co/guide/en/logstash/current/plugins-outputs-datadog.html)
+   - [Logstash introduction](https://www.elastic.co/guide/en/logstash/current/introduction.html)
+   - [Kafka input plugin](https://www.elastic.co/guide/en/logstash/current/plugins-inputs-kafka.html)
+   - [Datadog output plugin](https://www.elastic.co/guide/en/logstash/current/plugins-outputs-datadog.html)
 - Dynatrace
   - [Dynatrace documentation](https://docs.dynatrace.com/docs)  
   - [Observe and explore logs](https://docs.dynatrace.com/docs/observe-and-explore/logs)  
